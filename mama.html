@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Meine Test-Website</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f4f4f4;
+      color: #333;
+      text-align: center;
+    }
+
+    header {
+      background-color: #222;
+      color: white;
+      padding: 30px;
+    }
+
+    main {
+      padding: 50px 20px;
+    }
+
+    .box {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Meine Test-Website</h1>
+  </header>
+
+  <main>
+    <div class="box">
+      <h2>Hallo 👋</h2>
+
+      <p>
+        Das ist eine einfache Website mit HTML, CSS und JavaScript.
+      </p>
+
+      <button onclick="testButton()">
+        Klick mich
+      </button>
+
+      <p id="text"></p>
+    </div>
+  </main>
+
+  <script>
+    function testButton() {
+      document.getElementById("text").innerText =
+        "Der Button funktioniert! 🎉";
+    }
+  </script>
+
+</body>
+</html>
