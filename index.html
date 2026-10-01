@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aufgaben</title>
+<style>
+:root{--bg:#eceff3;--card:#fff;--ink:#18212f;--muted:#6b7686;--line:#dde2e9;--accent:#2f5bea;--done:#1f9d6b}
+@media(prefers-color-scheme:dark){:root{--bg:#0f141c;--card:#171e29;--ink:#e7ebf1;--muted:#8a95a6;--line:#263040;--accent:#6b8cff;--done:#3ec28f}}
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;padding:clamp(16px,5vw,64px) 16px;background:var(--bg);color:var(--ink);font:16px/1.5 "Avenir Next","Segoe UI",system-ui,sans-serif}
+button,input{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:600px;margin:0 auto}
+h1{font-size:clamp(2rem,6vw,2.6rem);letter-spacing:-.03em;line-height:1.1}
+.date{color:var(--muted);font-size:.95rem}
+.card{margin-top:24px;background:var(--card);border-radius:20px;box-shadow:0 12px 32px -12px rgba(0,0,0,.2);overflow:hidden}
+.top{padding:20px 24px;border-bottom:1px solid var(--line)}
+.top div{display:flex;justify-content:space-between;margin-bottom:10px;font-weight:600}
+.top span{color:var(--muted);font-weight:400}
+.bar{height:8px;border-radius:9px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .4s,background .3s}
+form{display:flex;gap:10px;padding:16px 20px}
+form input{flex:1;min-width:0;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);cursor:text}
+form input:focus{outline:2px solid var(--accent);background:var(--card)}
+form button{padding:0 18px;border-radius:12px;background:var(--accent);color:var(--card);font-weight:600}
+nav{display:flex;gap:4px;padding:0 20px}
+nav button{padding:4px 14px;border-radius:99px;color:var(--muted);font-size:.9rem}
+nav .on{background:var(--ink);color:var(--card)}
+ul{list-style:none;padding:8px 12px;min-height:90px}
+li{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:12px}
+li:hover{background:var(--bg)}
+li label{flex:1;display:flex;align-items:center;gap:12px;cursor:pointer;overflow-wrap:anywhere}
+li input{appearance:none;flex:none;width:22px;height:22px;border:2px solid var(--line);border-radius:50%;display:grid;place-items:center}
+li input:checked{background:var(--done);border-color:var(--done)}
+li input:checked::after{content:"✓";color:#fff;font-size:13px;font-weight:700}
+li.done label span{color:var(--muted);text-decoration:line-through}
+.del{color:var(--muted);font-size:1.3rem;padding:0 8px;border-radius:8px}
+.del:hover{color:#d64545}
+.empty{justify-content:center;color:var(--muted)}
+footer{display:flex;justify-content:space-between;padding:12px 20px;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
+footer button{color:inherit}
+footer button:hover{color:#d64545}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <p class="date" id="date"></p>
+  <h1>Aufgaben</h1>
+  <section class="card">
+    <div class="top"><div><b id="count"></b><span id="pct"></span></div><div class="bar"><i id="bar"></i></div></div>
+    <form id="form">
+      <input id="input" maxlength="200" placeholder="Neue Aufgabe eingeben" aria-label="Neue Aufgabe" autocomplete="off">
+      <button>Hinzufügen</button>
+    </form>
+    <nav id="nav"><button class="on" data-f="all">Alle</button><button data-f="open">Offen</button><button data-f="done">Erledigt</button></nav>
+    <ul id="list"></ul>
+    <footer><span id="left"></span><button id="clear">Erledigte entfernen</button></footer>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let todos = [], filter = 'all';
+try { todos = JSON.parse(localStorage.todos) || []; } catch {}
+
+$('date').textContent = new Date().toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
+
+function render() {
+  const done = todos.filter(t => t.done).length, pct = todos.length ? Math.round(done / todos.length * 100) : 0;
+  $('count').textContent = `${done} von ${todos.length} erledigt`;
+  $('pct').textContent = pct + ' %';
+  $('bar').style.width = pct + '%';
+  $('bar').style.background = pct === 100 ? 'var(--done)' : '';
+  $('left').textContent = `${todos.length - done} offen`;
+  try { localStorage.todos = JSON.stringify(todos); } catch {}
+
+  const shown = todos.filter(t => filter === 'all' || t.done === (filter === 'done'));
+  $('list').innerHTML = shown.length ? '' : '<li class="empty">Keine Aufgaben</li>';
+  shown.forEach(t => {
+    const li = document.createElement('li');
+    li.className = t.done ? 'done' : '';
+    li.innerHTML = '<label><input type="checkbox"><span></span></label><button class="del" aria-label="Löschen">×</button>';
+    li.querySelector('span').textContent = t.text;
+    const box = li.querySelector('input');
+    box.checked = t.done;
+    box.onchange = () => { t.done = box.checked; render(); };
+    li.querySelector('.del').onclick = () => { todos = todos.filter(x => x !== t); render(); };
+    $('list').append(li);
+  });
+}
+
+$('form').onsubmit = e => {
+  e.preventDefault();
+  const text = $('input').value.trim();
+  if (text) todos.unshift({text, done:false});
+  $('input').value = '';
+  render();
+};
+$('nav').onclick = e => {
+  if (!e.target.dataset.f) return;
+  filter = e.target.dataset.f;
+  [...$('nav').children].forEach(b => b.classList.toggle('on', b === e.target));
+  render();
+};
+$('clear').onclick = () => { todos = todos.filter(t => !t.done); render(); };
+render();
+</script>
+</body>
+</html>
