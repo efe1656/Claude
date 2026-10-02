@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Testseite</title>
+<style>
+  :root {
+    --bg: #f5f7f4;
+    --surface: #ffffff;
+    --text: #1d2a26;
+    --muted: #5d6b66;
+    --accent: #1f6f5c;
+    --accent-text: #ffffff;
+    --border: #d5ddd8;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121a17; --surface: #1b2622; --text: #e6efeb;
+      --muted: #9fb0a9; --accent: #4fb89d; --accent-text: #0e1a16; --border: #2c3b35;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121a17; --surface: #1b2622; --text: #e6efeb;
+    --muted: #9fb0a9; --accent: #4fb89d; --accent-text: #0e1a16; --border: #2c3b35;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+  }
+  header, main, footer { max-width: 40rem; margin: 0 auto; padding: 1.25rem; }
+  header { display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-weight: 700; font-size: 1.1rem; }
+  nav a { color: var(--muted); text-decoration: none; margin-left: 1rem; }
+  nav a:hover, nav a:focus-visible { color: var(--accent); }
+  h1 { font-size: clamp(1.8rem, 6vw, 2.6rem); line-height: 1.15; margin: 2rem 0 0.75rem; }
+  p { color: var(--muted); max-width: 60ch; }
+  section { margin-top: 2rem; }
+  .box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+  button, input {
+    font: inherit;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 0.55rem 0.9rem;
+    background: var(--surface);
+    color: var(--text);
+  }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); cursor: pointer; }
+  button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+  output { font-weight: 700; font-variant-numeric: tabular-nums; }
+  footer { color: var(--muted); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+  <header>
+    <span class="logo">Testseite</span>
+    <nav>
+      <a href="#zaehler">Zähler</a>
+      <a href="#formular">Formular</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Hallo Welt – die Seite läuft.</h1>
+    <p>Dies ist eine einfache Test-Website mit HTML, CSS und etwas JavaScript. Du kannst sie als Ausgangspunkt für eigene Seiten nutzen.</p>
+
+    <section id="zaehler" class="box">
+      <h2>Zähler</h2>
+      <div class="row">
+        <button id="minus" type="button">−</button>
+        <output id="wert">0</output>
+        <button id="plus" type="button" class="primary">+</button>
+      </div>
+    </section>
+
+    <section id="formular" class="box">
+      <h2>Begrüßung</h2>
+      <div class="row">
+        <input id="name" type="text" placeholder="Dein Name" aria-label="Dein Name">
+        <button id="gruss" type="button" class="primary">Begrüßen</button>
+      </div>
+      <p id="ausgabe" aria-live="polite"></p>
+    </section>
+
+    <section>
+      <button id="theme" type="button">Design wechseln</button>
+    </section>
+  </main>
+
+  <footer>© 2026 Testseite</footer>
+
+  <script>
+    var wert = 0;
+    var anzeige = document.getElementById("wert");
+    document.getElementById("plus").addEventListener("click", function () {
+      wert++; anzeige.textContent = wert;
+    });
+    document.getElementById("minus").addEventListener("click", function () {
+      wert--; anzeige.textContent = wert;
+    });
+    document.getElementById("gruss").addEventListener("click", function () {
+      var name = document.getElementById("name").value.trim();
+      document.getElementById("ausgabe").textContent =
+        name ? "Hallo, " + name + "!" : "Bitte gib zuerst einen Namen ein.";
+    });
+    document.getElementById("theme").addEventListener("click", function () {
+      var root = document.documentElement;
+      var dunkel = root.getAttribute("data-theme") === "dark" ||
+        (!root.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      root.setAttribute("data-theme", dunkel ? "light" : "dark");
+    });
+  </script>
+</body>
+</html>
