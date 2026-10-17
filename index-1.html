@@ -2251,5 +2251,146 @@ document.addEventListener("visibilitychange", () => {
     display: none;
   }
 </style>tes
+<style>
+/* Statistik auf schmalen Bildschirmen ohne seitliches Wischen */
+@media (max-width: 720px) {
+  #statistics .table-scroll {
+    overflow: visible;
+    min-width: 0;
+  }
+
+  #taskStats table,
+  #taskStats tbody {
+    display: block;
+    width: 100%;
+  }
+
+  #taskStats thead {
+    display: none;
+  }
+
+  #taskStats tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    background: #101620;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+
+  #taskStats td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Aufgabenname */
+  #taskStats td:first-child {
+    grid-column: 1 / -1;
+    min-width: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    font-size: .95rem;
+    font-weight: 700;
+  }
+
+  /* Beschriftungen direkt bei den Zahlen */
+  #taskStats td:not(:first-child)::before {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--muted);
+    font-size: .64rem;
+    font-weight: 500;
+  }
+
+  #taskStats td:nth-child(2)::before {
+    content: "✅ Geschafft";
+  }
+
+  #taskStats td:nth-child(3)::before {
+    content: "❌ Nicht geschafft";
+  }
+
+  #taskStats td:nth-child(4)::before {
+    content: "📌 Offen";
+  }
+
+  #taskStats td:nth-child(2),
+  #taskStats td:nth-child(3),
+  #taskStats td:nth-child(4) {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  /* Zeit bekommt eine eigene, vollständig sichtbare Zeile */
+  #taskStats td:nth-child(5) {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  #taskStats td:nth-child(5)::before {
+    content: "⏱️ Erfasste Zeit";
+    margin: 0;
+    font-size: .75rem;
+  }
+
+  /* Auch Kennzahlen, Datumsauswahl und Diagramme passen sich an */
+  #statistics .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  #statistics .metric {
+    min-width: 0;
+    padding: 13px;
+  }
+
+  #statistics .metric strong {
+    font-size: clamp(1.05rem, 5vw, 1.5rem);
+    overflow-wrap: anywhere;
+  }
+
+  #statistics .actions {
+    flex-wrap: wrap;
+  }
+
+  #statistics #statsDate {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 130px;
+  }
+
+  #statistics .chart-row {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+    gap: 8px;
+  }
+
+  #statistics .chart-row > :last-child {
+    text-align: right;
+  }
+
+  #goalStats .item {
+    flex-wrap: wrap;
+  }
+
+  #goalStats .body {
+    overflow-wrap: anywhere;
+  }
+}
+</style>
 </body>
 </html>
