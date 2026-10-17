@@ -1993,5 +1993,258 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 </script>
+<style>
+.daily-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  border: 1px solid #2b3547;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #19212d, #141a24);
+}
+
+.daily-progress__label {
+  margin: 0 0 8px;
+  color: #a4afc2;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.daily-progress h2 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  letter-spacing: -.02em;
+}
+
+.daily-progress__detail {
+  margin: 0;
+  color: #a4afc2;
+  font-size: .85rem;
+  line-height: 1.6;
+}
+
+.daily-progress__detail strong {
+  color: #f2f5fa;
+}
+
+.daily-progress__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 13px;
+  color: #a4afc2;
+  font-size: .72rem;
+}
+
+.daily-progress__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.daily-progress__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff914d;
+}
+
+.daily-progress__dot--remaining {
+  background: #536078;
+}
+
+.daily-progress__ring {
+  --progress: 0%;
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 112px;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #ff914d 0% var(--progress),
+    #303b4e var(--progress) 100%
+  );
+}
+
+.daily-progress__ring::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: #161d28;
+}
+
+.daily-progress__center {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+
+.daily-progress__percent {
+  color: #f2f5fa;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-progress__caption {
+  color: #a4afc2;
+  font-size: .65rem;
+}
+
+@media (max-width: 480px) {
+  .daily-progress {
+    padding: 19px 16px;
+    gap: 14px;
+  }
+
+  .daily-progress__ring {
+    flex-basis: 96px;
+    width: 96px;
+    height: 96px;
+  }
+
+  .daily-progress__percent {
+    font-size: 1.4rem;
+  }
+
+  .daily-progress h2 {
+    font-size: 1rem;
+  }
+}
+</style>
+
+<script>
+(() => {
+  /* Verhindert eine doppelte Einbindung des Diagramms. */
+  if (document.getElementById("dailyProgressCard")) return;
+
+  const card = document.createElement("section");
+  card.id = "dailyProgressCard";
+  card.className = "daily-progress";
+  card.setAttribute("aria-labelledby", "dailyProgressTitle");
+
+  card.innerHTML = `
+    <div>
+      <p class="daily-progress__label">Dein Tagesfortschritt</p>
+      <h2 id="dailyProgressTitle">Jeder Schritt zählt.</h2>
+
+      <p class="daily-progress__detail" id="dailyProgressDetail"></p>
+
+      <div class="daily-progress__legend" aria-hidden="true">
+        <span>
+          <i class="daily-progress__dot"></i>
+          Geschafft
+        </span>
+        <span>
+          <i class="daily-progress__dot daily-progress__dot--remaining"></i>
+          Übrig
+        </span>
+      </div>
+    </div>
+
+    <div
+      class="daily-progress__ring"
+      id="dailyProgressRing"
+      role="progressbar"
+      aria-label="Heute geschaffte Aufgaben"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="0"
+    >
+      <div class="daily-progress__center" aria-hidden="true">
+        <span class="daily-progress__percent" id="dailyProgressPercent">
+          0 %
+        </span>
+        <span class="daily-progress__caption">geschafft</span>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("homeMetrics").insertAdjacentElement("afterend", card);
+
+  function updateDailyProgress() {
+    const date = today();
+
+    const tasks = occurrences(date).filter(item => item.date === date);
+    const total = tasks.length;
+    const completed = tasks.filter(item => item.status === "done").length;
+    const missed = tasks.filter(item => item.status === "missed").length;
+    const open = tasks.filter(item => item.status === "open").length;
+
+    const exactPercent = total ? completed / total * 100 : 0;
+
+    /* Zeigt erst dann 100 %, wenn wirklich alles geschafft ist. */
+    const percent = completed === total && total > 0
+      ? 100
+      : Math.min(99, Math.round(exactPercent));
+
+    const ring = document.getElementById("dailyProgressRing");
+    const detail = document.getElementById("dailyProgressDetail");
+    const title = document.getElementById("dailyProgressTitle");
+
+    ring.style.setProperty("--progress", exactPercent + "%");
+    ring.setAttribute("aria-valuenow", String(percent));
+    ring.setAttribute(
+      "aria-valuetext",
+      total
+        ? `${completed} von ${total} Aufgaben geschafft. ` +
+          `${open} offen, ${missed} nicht geschafft.`
+        : "Für heute sind keine Aufgaben geplant."
+    );
+
+    document.getElementById("dailyProgressPercent").textContent =
+      percent + " %";
+
+    if (!total) {
+      title.textContent = "Dein Tag beginnt mit einem Plan.";
+      detail.textContent = "Heute sind noch keine Aufgaben geplant.";
+      card.querySelector(".daily-progress__legend").hidden = true;
+      return;
+    }
+
+    card.querySelector(".daily-progress__legend").hidden = false;
+
+    title.textContent = completed === total
+      ? "Alles für heute geschafft. ✨"
+      : "Jeder Schritt zählt.";
+
+    detail.innerHTML =
+      `<strong>${completed} von ${total}</strong> Aufgaben geschafft` +
+      `<br>${open} offen` +
+      (missed ? ` · ${missed} nicht geschafft` : "");
+  }
+
+  /* Aktualisiert sich beim Speichern, Abhaken und Online-Aktualisieren. */
+  const previousRender = render;
+
+  render = function (...args) {
+    const result = previousRender.apply(this, args);
+    updateDailyProgress();
+    return result;
+  };
+
+  updateDailyProgress();
+
+  /* Auch bei einem Tageswechsel die Anzeige aktualisieren. */
+  let displayedDay = today();
+
+  setInterval(() => {
+    if (today() !== displayedDay) {
+      displayedDay = today();
+      render();
+    }
+  }, 30000);
+})();
+</script>
 </body>
 </html>
