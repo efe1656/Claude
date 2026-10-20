@@ -4063,5 +4063,424 @@ document.addEventListener("visibilitychange", () => {
   if (ready) render();
 })();
 </script>
+<script>
+(() => {
+  "use strict";
+
+  if (document.getElementById("eventRecurrenceFields")) return;
+
+  const el = id => document.getElementById(id);
+  const weekdays = [
+    [1, "Mo"], [2, "Di"], [3, "Mi"], [4, "Do"],
+    [5, "Fr"], [6, "Sa"], [0, "So"]
+  ];
+
+  const box = document.createElement("section");
+  box.id = "eventRecurrenceFields";
+  box.style.cssText =
+    "margin-top:16px;padding:14px;border:1px solid #394151;" +
+    "border-radius:14px;background:#101620";
+
+  box.innerHTML = `
+    <label>
+      🔁 Wiederholung
+      <select id="eventFrequency">
+        <option value="">Einmalig</option>
+        <option value="daily">Täglich</option>
+        <option value="weekly">Wöchentlich</option>
+        <option value="monthly">Monatlich</option>
+      </select>
+    </label>
+
+    <div id="eventRecurrenceOptions" class="hidden">
+      <label>
+        Abstand
+        <div style="display:flex;align-items:center;gap:10px">
+          <span>Alle</span>
+          <input id="eventFrequencyInterval"
+            type="number" min="1" max="365" step="1" value="1"
+            style="width:90px">
+          <span id="eventIntervalUnit">Wochen</span>
+        </div>
+      </label>
+
+      <fieldset id="eventWeekdays"
+        style="border:0;padding:0;margin:14px 0">
+        <legend style="font-size:.85rem">An diesen Tagen</legend>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${weekdays.map(([value, label]) => `
+            <label style="display:flex;align-items:center;gap:5px;
+                          padding:8px;margin:0">
+              <input type="checkbox" name="eventWeekday"
+                value="${value}" style="width:auto;margin:0">
+              ${label}
+            </label>
+          `).join("")}
+        </div>
+      </fieldset>
+
+      <label>
+        Letzte Wiederholung · leer = unbegrenzt
+        <input id="eventRecurrenceUntil" type="date">
+      </label>
+
+      <p id="eventMonthlyHint" class="hidden"
+        style="font-size:.78rem;color:#b3bdcd">
+        Fehlt der gewählte Tag in einem Monat, wird dessen letzter
+        Tag verwendet. Beispiel: 31. Januar → 28. Februar → 31. März.
+      </p>
+
+      <p style="font-size:.78rem;color:#b3bdcd;line-height:1.5">
+        Europe/Berlin · gleiche Ortszeit auch nach der Zeitumstellung.
+        Bearbeiten und Löschen gelten für die gesamte Serie.
+        Ferien und Feiertage werden nicht automatisch ausgenommen.
+      </p>
+    </div>
+  `;
+
+  el("eventFields").appendChild(box);
+
+  function updateFields() {
+    const frequency = el("eventFrequency").value;
+    const active = Boolean(frequency);
+
+    el("eventRecurrenceOptions").classList.toggle("hidden", !active);
+    el("eventWeekdays").classList.toggle(
+      "hidden", frequency !== "weekly"
+    );
+    el("eventMonthlyHint").classList.toggle(
+      "hidden", frequency !== "monthly"
+    );
+
+    el("eventIntervalUnit").textContent = {
+      daily: "Tage",
+      weekly: "Wochen",
+      monthly: "Monate"
+    }[frequency] || "";
+
+    el("eventFrequencyInterval").disabled = !active;
+    el("eventRecurrenceUntil").disabled = !active;
+
+    box.querySelectorAll('[name="eventWeekday"]').forEach(input => {
+      input.disabled = frequency !== "weekly";
+    });
+
+    el("eventRecurrenceUntil").min =
+      el("editStart").value.slice(0, 10);
+  }
+
+  el("eventFrequency").addEventListener("change", updateFields);
+  el("editStart").addEventListener("change", updateFields);
+
+  /*
+   * Das bestehende Formular bleibt erhalten, einschließlich
+   * Emoji-Vorschlägen und Zielzuordnung.
+   */
+  const previousOpenEditor = openEditor;
+
+  openEditor = function(type, id = "") {
+    previousOpenEditor(type, id);
+
+    if (type !== "event") return;
+
+    const item = id
+      ? data.events.find(event => event.id === id)
+      : null;
+
+    const recurrence = item?.recurrence;
+    const startDay = el("editStart").value.slice(0, 10);
+
+    el("eventFrequency").value = recurrence?.frequency || "";
+    el("eventFrequencyInterval").value = recurrence?.interval || 1;
+    el("eventRecurrenceUntil").value = recurrence?.until || "";
+
+    const selected = recurrence?.weekdays || [weekday(startDay)];
+
+    box.querySelectorAll('[name="eventWeekday"]').forEach(input => {
+      input.checked = selected.includes(Number(input.value));
+    });
+
+    updateFields();
+
+    if (recurrence) {
+      el("editorTitle").textContent = "✏️ Gesamte Terminserie bearbeiten";
+    }
+  };
+
+  function readRecurrence() {
+    const frequency = el("eventFrequency").value;
+    if (!frequency) return null;
+
+    const interval = Number(el("eventFrequencyInterval").value);
+    const startDay = el("editStart").value.slice(0, 10);
+    const until = el("eventRecurrenceUntil").value;
+
+    if (!Number.isInteger(interval) || interval < 1 || interval > 365) {
+      throw Error("Bitte einen Abstand zwischen 1 und 365 eingeben.");
+    }
+
+    if (!validDay(startDay)) {
+      throw Error("Bitte ein gültiges Startdatum eingeben.");
+    }
+
+    if (until && (!validDay(until) || until < startDay)) {
+      throw Error("Das Wiederholungsende darf nicht vor dem Beginn liegen.");
+    }
+
+    const selectedDays = [
+      ...box.querySelectorAll('[name="eventWeekday"]:checked')
+    ].map(input => Number(input.value));
+
+    if (frequency === "weekly" && !selectedDays.length) {
+      throw Error("Bitte mindestens einen Wochentag auswählen.");
+    }
+
+    return {
+      frequency,
+      interval,
+      weekdays: frequency === "weekly" ? selectedDays : [],
+      until,
+      timezone: "Europe/Berlin"
+    };
+  }
+
+  /*
+   * Validierung vor den vorhandenen Formularhandlern.
+   * Eine Serie wird als einzelner Datensatz gespeichert.
+   */
+  el("editForm").addEventListener("submit", event => {
+    if (el("editType").value !== "event") return;
+
+    try {
+      readRecurrence();
+    } catch (error) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      el("formError").textContent = error.message;
+    }
+  }, true);
+
+  const previousCommit = commit;
+
+  commit = async function(change) {
+    const editingEvent =
+      el("editor").open && el("editType").value === "event";
+
+    if (!editingEvent) return previousCommit(change);
+
+    let recurrence;
+
+    try {
+      recurrence = readRecurrence();
+    } catch (error) {
+      el("formError").textContent = error.message;
+      return false;
+    }
+
+    const editingId = el("editId").value;
+
+    return previousCommit(draft => {
+      const previousIds = new Set(draft.events.map(event => event.id));
+
+      change(draft);
+
+      const item = editingId
+        ? draft.events.find(event => event.id === editingId)
+        : draft.events.find(event => !previousIds.has(event.id));
+
+      if (!item) return;
+
+      if (recurrence) {
+        item.recurrence = JSON.parse(JSON.stringify(recurrence));
+      } else {
+        delete item.recurrence;
+      }
+    });
+  };
+
+  /*
+   * Wochen werden ab der Woche des Startdatums gezählt.
+   * Dadurch bleibt "alle 2 Wochen" auch über Jahreswechsel korrekt.
+   */
+  function matches(event, day) {
+    const anchor = event.start.slice(0, 10);
+    const recurrence = event.recurrence;
+
+    if (
+      day < anchor ||
+      (recurrence?.until && day > recurrence.until)
+    ) return false;
+
+    if (!recurrence) return day === anchor;
+
+    const interval = recurrence.interval;
+
+    if (recurrence.frequency === "daily") {
+      return daysBetween(anchor, day) % interval === 0;
+    }
+
+    if (recurrence.frequency === "weekly") {
+      const weeks = Math.floor(
+        daysBetween(monday(anchor), monday(day)) / 7
+      );
+
+      return weeks % interval === 0 &&
+        recurrence.weekdays.includes(weekday(day));
+    }
+
+    if (recurrence.frequency === "monthly") {
+      const original = dateUTC(anchor);
+      const current = dateUTC(day);
+
+      const months =
+        (current.getUTCFullYear() - original.getUTCFullYear()) * 12 +
+        current.getUTCMonth() - original.getUTCMonth();
+
+      const lastDay = new Date(Date.UTC(
+        current.getUTCFullYear(),
+        current.getUTCMonth() + 1,
+        0
+      )).getUTCDate();
+
+      return months % interval === 0 &&
+        current.getUTCDate() === Math.min(original.getUTCDate(), lastDay);
+    }
+
+    return false;
+  }
+
+  function recurrenceLabel(event) {
+    const recurrence = event.recurrence;
+    if (!recurrence) return "";
+
+    const interval = recurrence.interval;
+    let label;
+
+    if (recurrence.frequency === "daily") {
+      label = interval === 1 ? "Täglich" : `Alle ${interval} Tage`;
+    } else if (recurrence.frequency === "weekly") {
+      const days = weekdays
+        .filter(([value]) => recurrence.weekdays.includes(value))
+        .map(([, text]) => text)
+        .join(", ");
+
+      label = (interval === 1 ? "Jede Woche" : `Alle ${interval} Wochen`) +
+        " · " + days;
+    } else {
+      label = interval === 1 ? "Monatlich" : `Alle ${interval} Monate`;
+    }
+
+    return "🔁 " + label +
+      (recurrence.until
+        ? " · bis " + displayDate(recurrence.until)
+        : " · unbegrenzt");
+  }
+
+  function eventsForDay(day) {
+    const result = [];
+
+    for (const event of data.events) {
+      if (event.archived || !event.start || !event.end) continue;
+
+      if (!event.recurrence) {
+        if (
+          event.start.slice(0, 10) <= day &&
+          event.end.slice(0, 10) >= day
+        ) {
+          result.push(event);
+        }
+        continue;
+      }
+
+      const anchor = event.start.slice(0, 10);
+      const span = daysBetween(anchor, event.end.slice(0, 10));
+
+      if (span < 0) continue;
+
+      /*
+       * Auch Termine über Mitternacht beziehungsweise mehrere Tage
+       * werden auf den betroffenen Kalendertagen angezeigt.
+       */
+      const earliest = addDays(day, -span);
+      const first = earliest < anchor ? anchor : earliest;
+
+      for (
+        let occurrenceDay = first;
+        occurrenceDay <= day;
+        occurrenceDay = addDays(occurrenceDay, 1)
+      ) {
+        if (!matches(event, occurrenceDay)) continue;
+
+        const start = occurrenceDay + "T" + event.start.slice(11);
+        const end = addDays(occurrenceDay, span) +
+          "T" + event.end.slice(11);
+
+        /* Ein Ende genau um Mitternacht belegt den Folgetag nicht. */
+        if (end <= day + "T00:00") continue;
+
+        result.push({ ...event, start, end });
+      }
+    }
+
+    return result.sort((a, b) =>
+      a.start.localeCompare(b.start) ||
+      a.name.localeCompare(b.name, "de")
+    );
+  }
+
+  /*
+   * Home und Kalender verwenden dieselbe Berechnung.
+   * Unbegrenzte Serien werden nicht als tausende Kopien gespeichert.
+   */
+  eventRows = function(day) {
+    const items = eventsForDay(day);
+
+    return items.map(event => {
+      const formatTime = value =>
+        (value.slice(0, 10) === day
+          ? ""
+          : displayDate(value.slice(0, 10)) + " ") +
+        value.slice(11, 16);
+
+      const repeating = Boolean(event.recurrence);
+
+      return `
+        <article class="item">
+          <div class="emoji">${esc(emoji(event, "event"))}</div>
+          <div class="body">
+            <div class="title">${esc(event.name)}</div>
+            <span class="badge">
+              🕒 ${esc(formatTime(event.start))}
+              – ${esc(formatTime(event.end))}
+            </span>
+
+            ${repeating ? `
+              <small style="display:block;margin-top:6px;color:#b3bdcd">
+                ${esc(recurrenceLabel(event))}
+              </small>
+              <small style="display:block;color:#b3bdcd">
+                Bearbeiten / Löschen: gesamte Serie
+              </small>
+            ` : ""}
+
+            <div class="actions">
+              ${actionButton(
+                "edit-event", "✏️", event.id,
+                repeating ? "Gesamte Serie bearbeiten" : "Termin bearbeiten"
+              )}
+              ${actionButton(
+                "archive-event", "🗑️", event.id,
+                repeating ? "Gesamte Serie löschen" : "Termin löschen"
+              )}
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("") || '<div class="empty">🌤️ Keine Termine geplant.</div>';
+  };
+
+  if (ready) render();
+})();
+</script>
 </body>
 </html>
