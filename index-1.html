@@ -4482,5 +4482,932 @@ document.addEventListener("visibilitychange", () => {
   if (ready) render();
 })();
 </script>
+<style id="fp-modern-design">
+  :root {
+    --fp-bg: #090e14;
+    --fp-card: #111a24;
+    --fp-border: #263342;
+    --fp-text: #f5f7fb;
+    --fp-muted: #9aa9bd;
+    --fp-orange: #ff861f;
+    --fp-green: #43df91;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at top, #15212d 0, transparent 55%),
+      var(--fp-bg) !important;
+    color: var(--fp-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button, input, select, textarea {
+    font: inherit;
+  }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--fp-orange);
+    outline-offset: 3px;
+  }
+
+  /*
+   * Die bisherige Home-Ansicht bleibt als Datenquelle bestehen.
+   * Sichtbar ist die neue Darstellung.
+   */
+  #home > :not(#fpModernHome) {
+    display: none !important;
+  }
+
+  #fpModernHome {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 4px 0 28px;
+    box-sizing: border-box;
+  }
+
+  #fpModernHome *,
+  .fp-event * {
+    box-sizing: border-box;
+  }
+
+  .fp-hero {
+    text-align: center;
+    padding: 10px 0 18px;
+  }
+
+  .fp-hero h1 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--fp-text);
+    font-size: clamp(27px, 7.4vw, 49px);
+    line-height: 1.12;
+    font-weight: 900;
+    letter-spacing: -1.8px;
+    white-space: nowrap;
+  }
+
+  .fp-hero h1 em {
+    color: var(--fp-orange);
+    font-style: normal;
+  }
+
+  .fp-flame {
+    font-size: .72em;
+    letter-spacing: 0;
+  }
+
+  .fp-hero p {
+    margin: 8px 0 0;
+    color: var(--fp-muted);
+    font-size: 13px;
+  }
+
+  .fp-date {
+    display: block;
+    margin-top: 15px;
+    color: #bdc8d7;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .fp-card {
+    margin-bottom: 13px;
+    padding: 16px;
+    border: 1px solid var(--fp-border);
+    border-radius: 20px;
+    background: linear-gradient(145deg, #131e29, #0e161f);
+    box-shadow: 0 8px 26px #00000018;
+  }
+
+  .fp-overview {
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    align-items: center;
+    gap: 18px;
+  }
+
+  .fp-ring {
+    position: relative;
+    width: 100%;
+    max-width: 190px;
+    margin: auto;
+    aspect-ratio: 1;
+  }
+
+  .fp-ring svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    transform: rotate(-90deg);
+  }
+
+  .fp-ring-track,
+  .fp-ring-value {
+    fill: none;
+    stroke-width: 13;
+  }
+
+  .fp-ring-track {
+    stroke: #263341;
+  }
+
+  .fp-ring-value {
+    stroke: var(--fp-orange);
+    stroke-linecap: round;
+    transition: stroke-dasharray .4s ease;
+  }
+
+  .fp-ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .fp-ring-center strong {
+    color: white;
+    font-size: clamp(29px, 8vw, 48px);
+    line-height: 1;
+    font-weight: 850;
+    letter-spacing: -2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .fp-ring-center span {
+    margin-top: 8px;
+    color: var(--fp-muted);
+    font-size: 12px;
+  }
+
+  .fp-week {
+    min-width: 0;
+  }
+
+  .fp-week-title {
+    margin: 0 0 17px;
+    color: #c8d1de;
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: 1.8px;
+  }
+
+  .fp-bars {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+    height: 94px;
+    align-items: end;
+  }
+
+  .fp-bar-column {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+  }
+
+  .fp-bar-track {
+    display: flex;
+    align-items: end;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 5px 5px 2px 2px;
+    background: #ffffff04;
+    border-bottom: 1px solid #334150;
+  }
+
+  .fp-bar-fill {
+    width: 100%;
+    height: var(--height);
+    background: linear-gradient(180deg, #ffa437, #ff751a);
+    border-radius: 5px 5px 1px 1px;
+  }
+
+  .fp-bar-column.fp-future .fp-bar-track {
+    background: #ffffff03;
+  }
+
+  .fp-bar-column small {
+    color: #98a7ba;
+    font-size: 10px;
+  }
+
+  .fp-bar-column.fp-today small {
+    color: var(--fp-orange);
+    font-weight: 800;
+  }
+
+  .fp-chart-note {
+    margin: 10px 0 0;
+    color: var(--fp-muted);
+    font-size: 10px;
+  }
+
+  .fp-add-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 17px;
+  }
+
+  #fpModernHome .fp-add-actions button {
+    width: 100%;
+    min-height: 46px;
+    margin: 0;
+    padding: 10px 8px;
+    border: 1px solid #344354;
+    border-radius: 13px;
+    background: #16212c;
+    color: white;
+    font-size: 14px;
+    font-weight: 750;
+  }
+
+  #fpModernHome .fp-add-actions button:first-child {
+    border-color: #ff9b37;
+    background: linear-gradient(120deg, #ff9b2f, #ff741a);
+    color: #19120c;
+  }
+
+  .fp-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 13px;
+  }
+
+  .fp-section-head h2 {
+    margin: 0;
+    color: white;
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -.6px;
+  }
+
+  .fp-section-head > span {
+    color: var(--fp-muted);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .fp-empty {
+    padding: 12px 0;
+    color: var(--fp-muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /*
+   * Bestehende Aufgabenbuttons bleiben funktionsfähig.
+   * Auch Nicht geschafft, Bearbeiten und Löschen bleiben erreichbar.
+   */
+  #fpModernHome .fp-tasks .item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 7px 0 !important;
+    padding: 11px !important;
+    border: 1px solid #263442 !important;
+    border-radius: 13px !important;
+    background: #19243080 !important;
+    min-width: 0;
+  }
+
+  #fpModernHome .fp-tasks .emoji {
+    display: grid;
+    place-items: center;
+    flex: 0 0 39px;
+    width: 39px;
+    height: 43px;
+    padding: 0;
+    border-radius: 11px;
+    background: #ff861f12;
+    font-size: 25px;
+  }
+
+  #fpModernHome .fp-tasks .body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  #fpModernHome .fp-tasks .title {
+    color: white;
+    font-size: 15px;
+    font-weight: 750;
+    overflow-wrap: anywhere;
+  }
+
+  #fpModernHome .fp-tasks small,
+  #fpModernHome .fp-tasks .badge {
+    color: var(--fp-muted);
+    font-size: 10px;
+  }
+
+  #fpModernHome .fp-tasks .actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+    margin-top: 8px;
+  }
+
+  #fpModernHome .fp-tasks .actions button {
+    display: grid;
+    place-items: center;
+    min-width: 36px;
+    min-height: 36px;
+    width: auto;
+    margin: 0;
+    padding: 6px 8px;
+    border: 1px solid #354252;
+    border-radius: 10px;
+    background: #101923;
+    color: #f3f6fb;
+    font-size: 13px;
+  }
+
+  /* Große Uhrzeiten – auf Home und im Kalender. */
+  #homeEvents .fp-event,
+  #calendarEvents .fp-event,
+  #fpModernHome .fp-event {
+    position: relative;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px 12px !important;
+    margin: 0 !important;
+    padding: 15px 0 15px 16px !important;
+    border: 0 !important;
+    border-bottom: 1px solid #263441 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+
+  .fp-event::before {
+    content: "";
+    position: absolute;
+    top: 23px;
+    left: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--fp-orange);
+    box-shadow: 0 0 0 4px #ff861f0d;
+  }
+
+  .fp-event:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .fp-event-time {
+    grid-column: 1;
+    color: #ffffff !important;
+    font-size: clamp(22px, 6.1vw, 32px) !important;
+    font-weight: 850 !important;
+    line-height: 1.15;
+    letter-spacing: -.7px;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .fp-event-name {
+    grid-column: 1;
+    color: #c9d3df;
+    font-size: 14px;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+  }
+
+  .fp-event .actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    display: flex !important;
+    align-items: center;
+    gap: 5px;
+    margin: 0 !important;
+  }
+
+  .fp-event .actions button {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    min-width: 36px;
+    height: 38px;
+    padding: 0 !important;
+    border: 1px solid #334353;
+    border-radius: 10px;
+    background: #15202b;
+  }
+
+  .fp-event-note {
+    grid-column: 1 / -1;
+    color: #8797aa;
+    font-size: 10px;
+    line-height: 1.5;
+  }
+
+  .fp-goal {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    gap: 8px 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid #263441;
+  }
+
+  .fp-goal:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .fp-goal-name {
+    color: #edf2f8;
+    font-size: 14px;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+  }
+
+  .fp-goal-percent {
+    color: #c6d1df;
+    text-align: right;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .fp-goal-track {
+    grid-column: 1 / -1;
+    height: 7px;
+    overflow: hidden;
+    border-radius: 20px;
+    background: #263341;
+  }
+
+  .fp-goal-fill {
+    height: 100%;
+    width: var(--progress);
+    border-radius: inherit;
+    background: linear-gradient(90deg, #ff751a, #ffac3d);
+  }
+
+  .fp-manage {
+    margin-top: 10px;
+    border: 1px solid var(--fp-border);
+    border-radius: 15px;
+    background: #111a24;
+  }
+
+  .fp-manage > summary {
+    padding: 14px;
+    color: #b7c5d6;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .fp-manage-list {
+    padding: 0 14px 14px;
+  }
+
+  .fp-manage-list .item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid #263441;
+  }
+
+  .fp-manage-list .body {
+    min-width: 0;
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .fp-manage-list small {
+    color: var(--fp-muted);
+    font-size: 11px;
+  }
+
+  @media (min-width: 640px) {
+    .fp-card {
+      padding: 22px;
+    }
+
+    .fp-overview {
+      gap: 35px;
+    }
+
+    .fp-bars {
+      height: 130px;
+      gap: 12px;
+    }
+
+    .fp-event-time {
+      font-size: 32px !important;
+    }
+
+    .fp-event-name {
+      font-size: 16px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .fp-card {
+      padding: 12px;
+    }
+
+    .fp-overview {
+      gap: 12px;
+    }
+
+    .fp-hero h1 {
+      font-size: 26px;
+      gap: 4px;
+    }
+
+    .fp-event-time {
+      font-size: 21px !important;
+    }
+
+    .fp-event .actions {
+      flex-direction: column;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fp-ring-value {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+(() => {
+  "use strict";
+
+  if (document.getElementById("fpModernHome")) return;
+
+  const home = document.getElementById("home");
+  if (!home) return;
+
+  const escapeHTML = value => String(value ?? "").replace(
+    /[&<>"']/g,
+    character => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[character]
+  );
+
+  const modern = document.createElement("div");
+  modern.id = "fpModernHome";
+
+  /*
+   * Originalbuttons kopieren, damit bestehende Klickaktionen
+   * und Formularfunktionen weiterverwendet werden.
+   */
+  const originalAddButtons = [
+    ...home.querySelectorAll("button")
+  ].filter(button =>
+    /[＋+]\s*(Aufgabe|Termin)/.test(button.textContent.trim())
+  ).slice(0, 2).map(button => button.cloneNode(true));
+
+  home.prepend(modern);
+
+  function stripDuplicateIds(root) {
+    root.removeAttribute?.("id");
+    root.querySelectorAll("[id]").forEach(node => {
+      node.removeAttribute("id");
+    });
+    return root;
+  }
+
+  function cloneMarkup(node) {
+    if (!node) return "";
+    return stripDuplicateIds(node.cloneNode(true)).outerHTML;
+  }
+
+  /*
+   * Bestehende Terminberechnung bleibt erhalten.
+   * Nur die zurückgegebene Darstellung wird umgestaltet.
+   */
+  const previousEventRows = eventRows;
+
+  eventRows = function(day) {
+    const markup = previousEventRows(day);
+    const template = document.createElement("template");
+    template.innerHTML = markup;
+
+    const articles = [
+      ...template.content.querySelectorAll("article.item")
+    ];
+
+    if (!articles.length) return markup;
+
+    articles.forEach(article => {
+      const title = article.querySelector(".title");
+      const time = article.querySelector(".badge");
+      const icon = article.querySelector(".emoji");
+      const actions = article.querySelector(".actions");
+
+      if (!title || !time) return;
+
+      const titleText = title.textContent.trim();
+      const timeText = time.textContent
+        .replace(/🕒|⏰|⏱️/gu, "")
+        .trim();
+
+      const iconText = icon?.textContent.trim() || "📅";
+
+      const notes = [...article.querySelectorAll("small")]
+        .map(node => node.textContent.trim())
+        .filter(Boolean)
+        .join(" · ");
+
+      const actionMarkup = actions?.outerHTML || "";
+
+      article.className = "item fp-event";
+      article.innerHTML = `
+        <div class="fp-event-time">${escapeHTML(timeText)}</div>
+        <div class="fp-event-name">
+          ${escapeHTML(iconText)} ${escapeHTML(titleText)}
+        </div>
+        ${actionMarkup}
+        ${notes ? `
+          <div class="fp-event-note">${escapeHTML(notes)}</div>
+        ` : ""}
+      `;
+    });
+
+    return template.innerHTML;
+  };
+
+  function taskMarkup() {
+    const sourceArticles = new Set();
+
+    /*
+     * Original-Aufgaben anhand ihrer bestehenden Aktionsbuttons finden.
+     * Die neue Ansicht selbst wird dabei ausgeschlossen.
+     */
+    home.querySelectorAll(
+      '[data-action="cancel-task"],' +
+      '[title="Diese Durchführung bearbeiten"]'
+    ).forEach(button => {
+      if (modern.contains(button)) return;
+
+      const article = button.closest("article");
+      if (article) sourceArticles.add(article);
+    });
+
+    if (!sourceArticles.size) {
+      return '<div class="fp-empty">✨ Keine offenen Aufgaben.</div>';
+    }
+
+    return [...sourceArticles].map(cloneMarkup).join("");
+  }
+
+  function goalMarkup() {
+    const goals = data.goals.filter(goal => !goal.archived);
+
+    if (!goals.length) {
+      return '<div class="fp-empty">🎯 Noch keine Ziele angelegt.</div>';
+    }
+
+    return goals.map(goal => {
+      const progress = Math.max(
+        0, Math.min(100, Number(goal.progress) || 0)
+      );
+
+      return `
+        <div class="fp-goal">
+          <div class="fp-goal-name">
+            ${escapeHTML(emoji(goal, "goal"))}
+            ${escapeHTML(goal.name)}
+          </div>
+          <div class="fp-goal-percent">${progress}%</div>
+
+          <div class="fp-goal-track"
+            role="progressbar"
+            aria-label="${escapeHTML(goal.name)}"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="${progress}">
+            <div class="fp-goal-fill"
+              style="--progress:${progress}%"></div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function drawHome() {
+    if (!ready) return;
+
+    const currentDay = today();
+    const rows = occurrences(currentDay);
+    const todayRows = rows.filter(row => row.date === currentDay);
+
+    const total = todayRows.length;
+    const done = todayRows.filter(row => row.status === "done").length;
+    const percentage = total ? Math.round(done / total * 100) : 0;
+
+    const openCount = rows.filter(row =>
+      row.status === "open" && row.date <= currentDay
+    ).length;
+
+    const weekStart = monday(currentDay);
+    const letters = ["M", "D", "M", "D", "F", "S", "S"];
+    const dayNames = [
+      "Montag", "Dienstag", "Mittwoch", "Donnerstag",
+      "Freitag", "Samstag", "Sonntag"
+    ];
+
+    const bars = letters.map((letter, index) => {
+      const day = addDays(weekStart, index);
+      const future = day > currentDay;
+      const dayRows = rows.filter(row => row.date === day);
+      const completed = dayRows.filter(row => row.status === "done").length;
+
+      const value = dayRows.length
+        ? Math.round(completed / dayRows.length * 100)
+        : 0;
+
+      const description = future
+        ? `${dayNames[index]}: noch bevorstehend`
+        : dayRows.length
+        ? `${dayNames[index]}: ${completed} von ${dayRows.length} geschafft, ${value} Prozent`
+        : `${dayNames[index]}: keine Aufgaben`;
+
+      return `
+        <div
+          class="fp-bar-column
+            ${future ? "fp-future" : ""}
+            ${day === currentDay ? "fp-today" : ""}"
+          title="${escapeHTML(description)}"
+          aria-label="${escapeHTML(description)}">
+          <div class="fp-bar-track">
+            <div class="fp-bar-fill"
+              style="--height:${future ? 0 : value}%"></div>
+          </div>
+          <small>${letter}</small>
+        </div>
+      `;
+    }).join("");
+
+    const dateLabel = new Intl.DateTimeFormat("de-DE", {
+      timeZone: "Europe/Berlin",
+      weekday: "long",
+      day: "numeric",
+      month: "long"
+    }).format(new Date());
+
+    const tasks = taskMarkup();
+    const events = eventRows(currentDay);
+
+    const eventTemplate = document.createElement("template");
+    eventTemplate.innerHTML = events;
+    const eventCount =
+      eventTemplate.content.querySelectorAll("article").length;
+
+    const managementOpen =
+      modern.querySelector(".fp-manage")?.open || false;
+
+    const managementSource = document.getElementById("seriesList");
+    const managementMarkup = managementSource
+      ? managementSource.innerHTML
+      : "";
+
+    modern.innerHTML = `
+      <header class="fp-hero">
+        <h1>
+          <span class="fp-flame" aria-hidden="true">🔥</span>
+          <span>YOU <em>VS</em> YOU</span>
+          <span class="fp-flame" aria-hidden="true">🔥</span>
+        </h1>
+        <p>Morgen kann es vorbei sein!</p>
+        <time class="fp-date" datetime="${currentDay}">
+          ${escapeHTML(dateLabel)}
+        </time>
+      </header>
+
+      <section class="fp-card" aria-label="Dein Fortschritt">
+        <div class="fp-overview">
+          <div class="fp-ring"
+            role="progressbar"
+            aria-label="Heute erledigte Aufgaben"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="${percentage}"
+            aria-valuetext="${done} von ${total} Aufgaben erledigt">
+            <svg viewBox="0 0 160 160" aria-hidden="true">
+              <circle class="fp-ring-track"
+                cx="80" cy="80" r="66"></circle>
+              <circle class="fp-ring-value"
+                cx="80" cy="80" r="66"
+                pathLength="100"
+                stroke-dasharray="${percentage} ${100 - percentage}"
+                style="${percentage === 0 ? "visibility:hidden" : ""}">
+              </circle>
+            </svg>
+
+            <div class="fp-ring-center">
+              <strong>${percentage}%</strong>
+              <span>${total ? `${done} von ${total}` : "Keine Aufgaben"}</span>
+            </div>
+          </div>
+
+          <div class="fp-week">
+            <h2 class="fp-week-title">DEINE WOCHE</h2>
+            <div class="fp-bars">${bars}</div>
+            <p class="fp-chart-note">Erledigte Aufgaben · Quote pro Tag</p>
+          </div>
+        </div>
+
+        <div class="fp-add-actions"></div>
+      </section>
+
+      <section class="fp-card">
+        <div class="fp-section-head">
+          <h2>Dein Tag</h2>
+          <span>${openCount} offen</span>
+        </div>
+        <div class="fp-tasks">${tasks}</div>
+      </section>
+
+      <section class="fp-card">
+        <div class="fp-section-head">
+          <h2>Termine</h2>
+          <span>${eventCount} heute</span>
+        </div>
+        <div class="fp-events">${events}</div>
+      </section>
+
+      <section class="fp-card">
+        <div class="fp-section-head">
+          <h2>Deine Ziele</h2>
+        </div>
+        ${goalMarkup()}
+        ${data.goals.some(goal => !goal.archived)
+          ? '<p class="fp-chart-note">Gespeicherter Zielfortschritt</p>'
+          : ""}
+      </section>
+
+      <details class="fp-manage" ${managementOpen ? "open" : ""}>
+        <summary>📋 Einträge verwalten</summary>
+        <div class="fp-manage-list">${managementMarkup}</div>
+      </details>
+    `;
+
+    const actionContainer = modern.querySelector(".fp-add-actions");
+
+    originalAddButtons.forEach(button => {
+      actionContainer.appendChild(
+        stripDuplicateIds(button.cloneNode(true))
+      );
+    });
+
+    /*
+     * Kopierte Verwaltungsinhalte erhalten keine doppelten IDs.
+     * data-action und data-id bleiben für die Bedienung erhalten.
+     */
+    modern.querySelectorAll(".fp-manage-list [id]").forEach(node => {
+      node.removeAttribute("id");
+    });
+  }
+
+  /*
+   * Nach dem bestehenden Rendern werden aktuelle Daten übernommen.
+   * Keine Änderung an Anmeldung, Speicherung oder Wiederholungsregeln.
+   */
+  const previousRender = render;
+
+  render = function(...args) {
+    const result = previousRender.apply(this, args);
+    drawHome();
+    return result;
+  };
+
+  if (ready) render();
+})();
+</script>
 </body>
 </html>
