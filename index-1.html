@@ -3680,5 +3680,388 @@ document.addEventListener("visibilitychange", () => {
   showGoalView(false);
 })();
 </script>
+<script>
+(() => {
+  "use strict";
+
+  if (document.getElementById("deleteEntryDialog")) return;
+
+  /* Den zuvor vorgeschlagenen Komplettlösch-Button entfernen. */
+  document.getElementById("resetPlanningData")?.remove();
+
+  const dialog = document.createElement("dialog");
+  dialog.id = "deleteEntryDialog";
+  dialog.setAttribute("aria-labelledby", "deleteEntryTitle");
+  dialog.style.cssText =
+    "width:min(440px,calc(100vw - 32px));padding:24px;" +
+    "border:1px solid #394151;border-radius:20px;" +
+    "background:#141a24;color:#f5f7fb";
+
+  dialog.innerHTML = `
+    <h2 id="deleteEntryTitle">🗑️ Eintrag löschen?</h2>
+    <p id="deleteEntryName"
+       style="font-weight:700;overflow-wrap:anywhere"></p>
+
+    <label id="deleteEntryScopeLabel" class="hidden">
+      Umfang
+      <select id="deleteEntryScope">
+        <option value="one">Nur diese Durchführung</option>
+        <option value="series">Gesamte Aufgabenserie</option>
+      </select>
+    </label>
+
+    <p id="deleteEntryExplanation"
+       style="color:#b3bdcd;font-size:.85rem;line-height:1.6"></p>
+
+    <p id="deleteEntryError" role="alert"
+       style="color:#ff8d9c"></p>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button type="button" id="deleteEntryCancel">Abbrechen</button>
+      <button type="button" id="deleteEntryConfirm"
+        style="background:#cf3650;color:white;border:0">
+        🗑️ Löschen
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+
+  const field = id => document.getElementById(id);
+  let pending = null;
+  let saving = false;
+
+  /*
+   * Bei einer wiederkehrenden Aufgabe wird nur das ausgeschlossene
+   * Ursprungsdatum gespeichert. Name, Status und Zeitdaten der
+   * gelöschten Durchführung werden entfernt.
+   */
+  const previousOccurrences = occurrences;
+  occurrences = function(until = today(), source = data) {
+    const excluded = new Set();
+
+    for (const task of source.tasks) {
+      for (const date of task.deletedDates || []) {
+        excluded.add(task.id + "@" + date);
+      }
+    }
+
+    return previousOccurrences(until, source)
+      .filter(item => !excluded.has(item.key));
+  };
+
+  function removeTask(draft, taskId) {
+    const records = draft.focusV2.records;
+    const removedKeys = new Set();
+
+    for (const [key, record] of Object.entries(records)) {
+      if (record.taskId === taskId) {
+        removedKeys.add(key);
+        delete records[key];
+      }
+    }
+
+    const timerKey = draft.focusV2.timer?.key;
+    if (
+      timerKey &&
+      (removedKeys.has(timerKey) || timerKey.startsWith(taskId + "@"))
+    ) {
+      draft.focusV2.timer = null;
+    }
+
+    draft.tasks = draft.tasks.filter(task => task.id !== taskId);
+    draft.log = draft.log.filter(entry => entry.taskId !== taskId);
+  }
+
+  function removeGoalLink(item, goalId) {
+    if (Array.isArray(item.goalIds)) {
+      item.goalIds = item.goalIds.filter(id => id !== goalId);
+    }
+
+    if (item.goalId === goalId) {
+      item.goalId = item.goalIds?.[0] || "";
+    }
+  }
+
+  function explanation() {
+    if (!pending) return;
+
+    const wholeSeries =
+      pending.kind === "task" ||
+      (pending.repeating && field("deleteEntryScope").value === "series");
+
+    field("deleteEntryExplanation").textContent =
+      pending.kind === "goal"
+        ? "Das Ziel wird endgültig gelöscht. Zugeordnete Aufgaben und " +
+          "Termine bleiben bestehen; die Verbindung zu diesem Ziel entfällt."
+        : pending.kind === "event"
+        ? "Dieser Termin wird endgültig gelöscht."
+        : wholeSeries
+        ? "Die gesamte Aufgabe beziehungsweise Serie wird endgültig " +
+          "gelöscht – einschließlich vergangener und zukünftiger " +
+          "Durchführungen, erfasster Zeiten und Statistikdaten."
+        : "Diese Durchführung wird endgültig gelöscht, einschließlich " +
+          "ihrer Zeit- und Statistikdaten. Andere Wiederholungen bleiben bestehen.";
+  }
+
+  function openDelete(kind, id) {
+    if (!ready || busy || !user) {
+      toast("Bitte zuerst anmelden und die Online-Daten aktualisieren.");
+      return;
+    }
+
+    if (dialog.open) return;
+
+    let item;
+    let task;
+
+    if (kind === "occurrence") {
+      item = findOccurrence(id);
+      task = data.tasks.find(t => t.id === item.taskId);
+    } else {
+      const collection =
+        kind === "task" ? data.tasks :
+        kind === "event" ? data.events : data.goals;
+
+      item = collection.find(entry => entry.id === id);
+    }
+
+    if (!item) {
+      toast("Dieser Eintrag wurde nicht gefunden.");
+      return;
+    }
+
+    pending = {
+      kind,
+      id,
+      taskId: task?.id,
+      repeating: Boolean(task?.repeat),
+      userId: user.id
+    };
+
+    field("deleteEntryName").textContent =
+      item.name +
+      (kind === "occurrence" ? " · " + displayDate(item.date) : "");
+
+    field("deleteEntryScope").value = "one";
+    field("deleteEntryScopeLabel").classList.toggle(
+      "hidden", !pending.repeating
+    );
+
+    field("deleteEntryError").textContent = "";
+    explanation();
+    dialog.showModal();
+    field("deleteEntryCancel").focus();
+  }
+
+  field("deleteEntryScope").addEventListener("change", explanation);
+
+  field("deleteEntryCancel").addEventListener("click", () => {
+    if (!saving) dialog.close();
+  });
+
+  dialog.addEventListener("cancel", event => {
+    if (saving) event.preventDefault();
+  });
+
+  dialog.addEventListener("close", () => {
+    pending = null;
+  });
+
+  field("deleteEntryConfirm").addEventListener("click", async () => {
+    if (!pending || saving) return;
+
+    if (!ready || busy || user?.id !== pending.userId) {
+      field("deleteEntryError").textContent =
+        "Bitte mit demselben Konto anmelden und die Daten aktualisieren.";
+      return;
+    }
+
+    const request = { ...pending };
+    const scope = field("deleteEntryScope").value;
+    saving = true;
+
+    field("deleteEntryConfirm").disabled = true;
+    field("deleteEntryCancel").disabled = true;
+    field("deleteEntryScope").disabled = true;
+
+    try {
+      const success = await commit(draft => {
+        if (request.kind === "task") {
+          removeTask(draft, request.id);
+          return;
+        }
+
+        if (request.kind === "occurrence") {
+          const separator = request.id.lastIndexOf("@");
+          const taskId = request.id.slice(0, separator);
+          const originalDate = request.id.slice(separator + 1);
+          const task = draft.tasks.find(t => t.id === taskId);
+
+          if (task && (!task.repeat || scope === "series")) {
+            removeTask(draft, taskId);
+            return;
+          }
+
+          if (task) {
+            task.deletedDates = [
+              ...new Set([...(task.deletedDates || []), originalDate])
+            ];
+          }
+
+          delete draft.focusV2.records[request.id];
+
+          if (draft.focusV2.timer?.key === request.id) {
+            draft.focusV2.timer = null;
+          }
+
+          draft.log = draft.log.filter(entry =>
+            entry.key !== request.id &&
+            entry.occurrenceKey !== request.id
+          );
+          return;
+        }
+
+        if (request.kind === "event") {
+          draft.events = draft.events.filter(e => e.id !== request.id);
+          return;
+        }
+
+        if (request.kind === "goal") {
+          draft.goals = draft.goals.filter(g => g.id !== request.id);
+
+          for (const item of [
+            ...draft.tasks,
+            ...draft.events,
+            ...Object.values(draft.focusV2.records),
+            ...draft.log
+          ]) {
+            removeGoalLink(item, request.id);
+          }
+        }
+      });
+
+      if (success) {
+        dialog.close();
+        toast("✅ Endgültig gelöscht und online gespeichert.");
+      } else {
+        field("deleteEntryError").textContent =
+          "Die Löschung wurde nicht bestätigt. Bitte abbrechen, " +
+          "Online-Daten aktualisieren und den Eintrag prüfen.";
+      }
+    } catch (error) {
+      field("deleteEntryError").textContent = error.message;
+    } finally {
+      saving = false;
+      field("deleteEntryConfirm").disabled = false;
+      field("deleteEntryCancel").disabled = false;
+      field("deleteEntryScope").disabled = false;
+    }
+  });
+
+  /*
+   * Die bisherige Archivansicht wird zur Eintragsverwaltung.
+   * Auch alte ausgeblendete Einträge sind einzeln löschbar.
+   * Es gibt keine Archivieren- oder Wiederherstellen-Aktionen mehr.
+   */
+  renderArchive = function() {
+    const container = field("seriesList");
+    if (!container) return;
+
+    const summary = container.closest("details")?.querySelector("summary");
+    if (summary) summary.textContent = "📋 Einträge verwalten";
+
+    const groups = [
+      ["task", "✅ Aufgaben und Serien", data.tasks],
+      ["event", "📅 Termine", data.events],
+      ["goal", "🎯 Ziele", data.goals]
+    ];
+
+    container.innerHTML = groups.map(([kind, title, items]) => {
+      if (!items.length) return "";
+
+      return `<h3>${esc(title)}</h3>` + items.map(item => `
+        <article class="item">
+          <div class="body">
+            <b>${esc(emoji(item, kind))} ${esc(item.name)}</b>
+            <small>
+              ${kind === "task" ? esc(repeatText(item)) : ""}
+              ${kind === "event" && item.start
+                ? esc(displayDate(item.start.slice(0, 10))) +
+                  " · " + esc(item.start.slice(11, 16))
+                : ""}
+              ${item.archiveDate || item.archived
+                ? " · bisher ausgeblendet" : ""}
+            </small>
+          </div>
+          ${actionButton(
+            "delete-" + kind,
+            "🗑️",
+            item.id,
+            kind === "task"
+              ? "Gesamte Aufgabe oder Serie löschen"
+              : "Eintrag löschen"
+          )}
+        </article>
+      `).join("");
+    }).join("") || '<div class="empty">Keine Einträge vorhanden.</div>';
+  };
+
+  /* Bestehende Papierkorb-Buttons erhalten passende Beschriftungen. */
+  const previousActionButton = actionButton;
+  actionButton = function(action, label, id = "", title = "", extra = "") {
+    const titles = {
+      "cancel-task": "Diese Durchführung löschen",
+      "archive-task": "Gesamte Aufgabe oder Serie löschen",
+      "archive-event": "Termin löschen",
+      "archive-goal": "Ziel löschen"
+    };
+
+    return previousActionButton(
+      action, label, id, titles[action] || title, extra
+    );
+  };
+
+  /*
+   * Vor den bisherigen Klickhandlern abfangen, damit deren
+   * Archivierungslogik und confirm()-Fenster nicht mehr ausgeführt werden.
+   */
+  document.addEventListener("click", event => {
+    const button = event.target.closest?.("button[data-action]");
+    if (!button) return;
+
+    const kinds = {
+      "cancel-task": "occurrence",
+      "archive-task": "task",
+      "archive-event": "event",
+      "archive-goal": "goal",
+      "delete-task": "task",
+      "delete-event": "event",
+      "delete-goal": "goal"
+    };
+
+    const action = button.dataset.action;
+
+    if (["restore-task", "restore-event", "restore-goal"].includes(action)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+
+    if (!kinds[action]) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    try {
+      openDelete(kinds[action], button.dataset.id);
+    } catch (error) {
+      toast(error.message);
+    }
+  }, true);
+
+  if (ready) render();
+})();
+</script>
 </body>
 </html>
