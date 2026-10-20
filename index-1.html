@@ -2878,5 +2878,807 @@ document.addEventListener("visibilitychange", () => {
   compactHome();
 })();
 </script>
+<style>
+/* ===== Zielauswahl ===== */
+#fpGoalAssignment {
+  margin-top: 16px;
+  padding: 14px;
+  background: #101620;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+#fpGoalAssignment h3 {
+  margin: 0 0 8px;
+  font-size: .95rem;
+}
+.fp-goal-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.fp-goal-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: .8rem;
+  overflow-wrap: anywhere;
+}
+.fp-goal-options label:has(input:checked) {
+  border-color: var(--accent);
+  background: #ff914d12;
+}
+.fp-goal-options input {
+  flex: 0 0 auto;
+}
+#fpApplySeriesLabel {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: .75rem;
+  line-height: 1.5;
+}
+#fpApplySeriesLabel input {
+  margin-top: 4px;
+}
+
+/* ===== Statistik: Ziele ===== */
+#statistics.fp-goals-mode .fp-standard-stat,
+#statistics.fp-goals-mode .fp-standard-date {
+  display: none !important;
+}
+#goalStatisticsPanel {
+  margin-top: 16px;
+}
+.fp-note {
+  color: var(--muted);
+  font-size: .74rem;
+  line-height: 1.6;
+}
+.fp-cutoff {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: .8rem;
+}
+.fp-cutoff input {
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+}
+.fp-goal-list {
+  display: grid;
+  gap: 12px;
+}
+.fp-goal-card {
+  width: 100%;
+  padding: 16px;
+  text-align: left;
+  white-space: normal;
+  background: linear-gradient(135deg, #19212d, #141a24);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.fp-goal-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.fp-goal-heading strong {
+  min-width: 0;
+  font-size: .95rem;
+  overflow-wrap: anywhere;
+}
+.fp-goal-heading small {
+  flex-shrink: 0;
+}
+.fp-goal-bar {
+  display: flex;
+  overflow: hidden;
+  height: 12px;
+  background: #0d131d;
+  border-radius: 8px;
+}
+.fp-goal-bar span {
+  display: block;
+  height: 100%;
+}
+.fp-done { background: #66dab0; }
+.fp-missed { background: #ff8d9c; }
+.fp-open { background: #718099; }
+.fp-goal-counts,
+.fp-goal-footer,
+.fp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  color: var(--muted);
+  font-size: .75rem;
+}
+.fp-goal-counts {
+  margin-top: 12px;
+}
+.fp-goal-counts b {
+  color: var(--text);
+}
+.fp-goal-footer {
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  margin-top: 12px;
+}
+.fp-legend {
+  margin: 15px 0;
+}
+.fp-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.fp-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.fp-goal-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 15px 0;
+}
+.fp-goal-metrics > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #101620;
+}
+.fp-goal-metrics small {
+  display: block;
+  font-size: .67rem;
+}
+.fp-goal-metrics strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.2rem;
+  overflow-wrap: anywhere;
+}
+.fp-history-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+.fp-history-row:last-child {
+  border-bottom: 0;
+}
+.fp-history-row strong {
+  overflow-wrap: anywhere;
+  font-size: .87rem;
+}
+.fp-history-row small {
+  grid-column: 1;
+  font-size: .71rem;
+}
+.fp-history-status {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  max-width: 120px;
+  text-align: right;
+  font-size: .72rem;
+}
+@media (max-width: 480px) {
+  .fp-goal-options {
+    grid-template-columns: 1fr;
+  }
+  .fp-goal-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .fp-goal-card {
+    padding: 14px;
+  }
+}
+</style>
+
+<script>
+(() => {
+  "use strict";
+
+  /* Diese Erweiterung nur einmal ausführen. */
+  if (document.getElementById("goalStatisticsPanel")) return;
+
+  const el = id => document.getElementById(id);
+
+  if (
+    typeof commit !== "function" ||
+    typeof occurrence !== "function" ||
+    typeof openEditor !== "function" ||
+    typeof renderStats !== "function"
+  ) {
+    console.error("Zielerweiterung: FokusPlan-Hauptcode fehlt.");
+    return;
+  }
+
+  /* Alte Einzelauswahl und neue Mehrfachauswahl unterstützen. */
+  function goalIds(item) {
+    const values = Array.isArray(item?.goalIds)
+      ? item.goalIds
+      : [item?.goalId];
+
+    return [...new Set(values.filter(
+      value => typeof value === "string" && value
+    ))];
+  }
+
+  function assignGoals(item, ids) {
+    item.goalIds = [...new Set(ids)];
+    item.goalId = item.goalIds[0] || "";
+  }
+
+  function timeMs(record) {
+    return (record.sessions || []).reduce((sum, session) =>
+      sum + (
+        session.manual
+          ? session.ms
+          : Math.max(0, session.end - session.start)
+      ), 0);
+  }
+
+  /*
+   * Wiederholungen übernehmen alle Ziele ihrer Aufgabenserie.
+   * Vorhandene gespeicherte Durchführungen bleiben unverändert.
+   */
+  const originalOccurrence = occurrence;
+
+  occurrence = function(task, date) {
+    const record = originalOccurrence(task, date);
+    assignGoals(record, goalIds(task));
+    return record;
+  };
+
+  /* ===== Mehrfachauswahl im bestehenden Editor ===== */
+
+  const assignment = document.createElement("section");
+  assignment.id = "fpGoalAssignment";
+  assignment.className = "hidden";
+  assignment.innerHTML = `
+    <h3>🎯 Zugehörige Ziele</h3>
+    <small>Wähle nur Ziele, die dieser Eintrag tatsächlich unterstützt.</small>
+    <div id="fpGoalOptions" class="fp-goal-options"></div>
+
+    <label id="fpApplySeriesLabel" class="hidden">
+      <input id="fpApplySeries" type="checkbox">
+      <span>
+        Zielzuordnung für die ganze Serie übernehmen,
+        einschließlich bisheriger Durchführungen.
+      </span>
+    </label>
+  `;
+
+  el("formError").before(assignment);
+
+  const originalOpenEditor = openEditor;
+
+  openEditor = function(type, id = "") {
+    originalOpenEditor(type, id);
+
+    if (!el("editor").open) return;
+
+    const supported = type === "task" || type === "event";
+    assignment.classList.toggle("hidden", !supported);
+
+    const oldGoalLabel = el("editGoal")?.closest("label");
+    if (oldGoalLabel) oldGoalLabel.hidden = supported;
+
+    if (!supported) return;
+
+    let item = {};
+    let series = false;
+
+    if (id && type === "task") {
+      item = findOccurrence(id);
+      series = Boolean(
+        data.tasks.find(task => task.id === item.taskId)?.repeat
+      );
+    }
+
+    if (id && type === "event") {
+      item = data.events.find(event => event.id === id) || {};
+    }
+
+    const selected = new Set(goalIds(item));
+    const goals = data.goals.filter(
+      goal => !goal.archived || selected.has(goal.id)
+    );
+
+    el("fpGoalOptions").innerHTML = goals.length
+      ? goals.map(goal => `
+          <label>
+            <input
+              type="checkbox"
+              name="fpLinkedGoal"
+              value="${esc(goal.id)}"
+              ${selected.has(goal.id) ? "checked" : ""}
+            >
+            <span>
+              ${esc(emoji(goal, "goal"))} ${esc(goal.name)}
+              ${goal.archived ? " · archiviert" : ""}
+            </span>
+          </label>
+        `).join("")
+      : "<small>Noch keine Ziele gespeichert.</small>";
+
+    el("fpApplySeries").checked = false;
+    el("fpApplySeriesLabel").classList.toggle("hidden", !series);
+  };
+
+  /*
+   * Die vorhandene Formularvalidierung und Speicherung bleiben zuständig.
+   * Für genau diesen Speichervorgang werden die Zielzuordnungen ergänzt.
+   */
+  let pendingGoalSave = null;
+
+  el("editForm").addEventListener("submit", () => {
+    const type = el("editType").value;
+    if (!["task", "event"].includes(type)) return;
+
+    const ids = [...assignment.querySelectorAll(
+      'input[name="fpLinkedGoal"]:checked'
+    )].map(input => input.value);
+
+    const context = {
+      type,
+      id: el("editId").value,
+      ids,
+      applySeries:
+        type === "task" &&
+        !el("fpApplySeriesLabel").classList.contains("hidden") &&
+        el("fpApplySeries").checked
+    };
+
+    /* Primäres Ziel auch an den vorhandenen Formularcode weitergeben. */
+    if (type === "task") {
+      el("editGoal").value = ids[0] || "";
+    }
+
+    pendingGoalSave = context;
+
+    /* Bei Validierungsfehlern keine Zuordnung für spätere Aktionen behalten. */
+    queueMicrotask(() => {
+      if (pendingGoalSave === context) pendingGoalSave = null;
+    });
+  }, true);
+
+  const originalCommit = commit;
+
+  commit = function(change) {
+    const context = pendingGoalSave;
+    pendingGoalSave = null;
+
+    if (!context) return originalCommit(change);
+
+    return originalCommit(draft => {
+      const oldTaskIds = new Set(draft.tasks.map(task => task.id));
+      const oldEventIds = new Set(draft.events.map(event => event.id));
+
+      change(draft);
+
+      if (context.type === "event") {
+        const event = context.id
+          ? draft.events.find(item => item.id === context.id)
+          : draft.events.find(item => !oldEventIds.has(item.id));
+
+        if (!event) throw Error("Termin für Zielzuordnung nicht gefunden.");
+        assignGoals(event, context.ids);
+        return;
+      }
+
+      if (context.id) {
+        const record = draft.focusV2.records[context.id];
+
+        if (!record) {
+          throw Error("Aufgabendurchführung für Zielzuordnung nicht gefunden.");
+        }
+
+        assignGoals(record, context.ids);
+
+        if (context.applySeries) {
+          const task = draft.tasks.find(
+            item => item.id === record.taskId
+          );
+
+          if (!task) throw Error("Aufgabenserie nicht gefunden.");
+
+          assignGoals(task, context.ids);
+
+          for (const entry of Object.values(draft.focusV2.records)) {
+            if (entry.taskId === task.id) {
+              assignGoals(entry, context.ids);
+            }
+          }
+        }
+      } else {
+        const task = draft.tasks.find(
+          item => !oldTaskIds.has(item.id)
+        );
+
+        if (!task) throw Error("Neue Aufgabe nicht gefunden.");
+
+        assignGoals(task, context.ids);
+
+        for (const record of Object.values(draft.focusV2.records)) {
+          if (record.taskId === task.id) {
+            assignGoals(record, context.ids);
+          }
+        }
+      }
+    });
+  };
+
+  /* ===== Vierte Statistikansicht ===== */
+
+  const statistics = el("statistics");
+  const buttons = el("periodButtons");
+  const toolbar = buttons.closest(".card");
+
+  const goalButton = document.createElement("button");
+  goalButton.type = "button";
+  goalButton.id = "fpGoalViewButton";
+  goalButton.textContent = "🎯 Ziele";
+  goalButton.setAttribute("aria-pressed", "false");
+  buttons.appendChild(goalButton);
+
+  for (const child of [...statistics.children]) {
+    if (child !== toolbar && child.tagName !== "H1") {
+      child.classList.add("fp-standard-stat");
+    }
+  }
+
+  for (const child of [...toolbar.children]) {
+    if (child !== buttons) child.classList.add("fp-standard-date");
+  }
+
+  const panel = document.createElement("section");
+  panel.id = "goalStatisticsPanel";
+  panel.className = "hidden";
+  statistics.appendChild(panel);
+
+  let active = false;
+  let selectedGoalId = null;
+  let cutoff = today();
+  let followToday = true;
+
+  function showGoalView(value) {
+    active = value;
+    statistics.classList.toggle("fp-goals-mode", value);
+    panel.classList.toggle("hidden", !value);
+    goalButton.classList.toggle("active", value);
+    goalButton.setAttribute("aria-pressed", String(value));
+
+    if (value) {
+      buttons.querySelectorAll('[data-action="period"]').forEach(
+        button => button.classList.remove("active")
+      );
+    }
+  }
+
+  goalButton.addEventListener("click", () => {
+    selectedGoalId = null;
+    showGoalView(true);
+    renderGoalsView();
+  });
+
+  buttons.addEventListener("click", event => {
+    if (event.target.closest('[data-action="period"]')) {
+      showGoalView(false);
+    }
+  }, true);
+
+  function summarize(id, rows) {
+    const linked = rows.filter(row => goalIds(row).includes(id));
+
+    return {
+      rows: linked,
+      total: linked.length,
+      done: linked.filter(row => row.status === "done").length,
+      missed: linked.filter(row => row.status === "missed").length,
+      open: linked.filter(row => row.status === "open").length,
+      worked: linked.filter(
+        row => row.status === "done" || timeMs(row) > 0
+      ).length,
+      time: linked.reduce((sum, row) => sum + timeMs(row), 0)
+    };
+  }
+
+  function bar(summary, maximum) {
+    const width = value => value / Math.max(1, maximum) * 100;
+
+    return `
+      <div class="fp-goal-bar" role="img"
+        aria-label="${summary.done} geschafft,
+        ${summary.missed} nicht geschafft,
+        ${summary.open} offen">
+        <span class="fp-done"
+          style="width:${width(summary.done)}%"></span>
+        <span class="fp-missed"
+          style="width:${width(summary.missed)}%"></span>
+        <span class="fp-open"
+          style="width:${width(summary.open)}%"></span>
+      </div>
+    `;
+  }
+
+  function metric(value, label) {
+    return `<div>
+      <small>${esc(label)}</small>
+      <strong>${esc(value)}</strong>
+    </div>`;
+  }
+
+  function status(row) {
+    if (row.status === "done") return "✅ Geschafft";
+    if (row.status === "missed") return "❌ Nicht geschafft";
+    return row.date < today() ? "⏳ Überfällig" : "📌 Offen";
+  }
+
+  function cutoffControl() {
+    return `
+      <label class="fp-cutoff">
+        <span>Aufgaben bis einschließlich</span>
+        <input id="fpGoalCutoff" type="date"
+          min="2000-01-01" max="2100-12-31"
+          value="${esc(cutoff)}">
+      </label>
+    `;
+  }
+
+  function note() {
+    return `
+      <p class="fp-note">
+        Jede Wiederholung zählt als eigene Durchführung.
+        Gezählt wird nach geplantem Aufgabentag bis zum gewählten Datum.
+        Eine Bearbeitung bedeutet: geschafft oder gespeicherte Zeit vorhanden.
+        Pro Durchführung wird sie einmal gezählt.
+        Laufende Timerzeit wird erst nach Stopp oder Beenden berücksichtigt.
+        Die angezeigte Zeit ist die gespeicherte Gesamtzeit dieser Durchführungen.
+        Bei mehreren Zielzuordnungen erscheint dieselbe Aufgabe in jedem
+        passenden Ziel. Die Zielwerte deshalb nicht zu einer
+        eindeutigen Gesamtsumme addieren.
+      </p>
+    `;
+  }
+
+  function renderGoalsView() {
+    if (!active) return;
+    if (followToday) cutoff = today();
+
+    const goals = data.goals;
+    const rows = occurrences(cutoff);
+
+    if (!goals.length) {
+      panel.innerHTML = `
+        <section class="card">
+          <h2>🎯 Ziele vergleichen</h2>
+          <p class="muted">Noch keine Ziele gespeichert.</p>
+        </section>
+      `;
+      return;
+    }
+
+    const summaries = new Map(
+      goals.map(goal => [goal.id, summarize(goal.id, rows)])
+    );
+
+    const maximum = Math.max(
+      1, ...[...summaries.values()].map(item => item.total)
+    );
+
+    const selected = goals.find(goal => goal.id === selectedGoalId);
+
+    if (!selected) {
+      selectedGoalId = null;
+
+      panel.innerHTML = `
+        <section class="card">
+          <h2>🎯 Ziele vergleichen</h2>
+          ${cutoffControl()}
+
+          <div class="fp-legend" aria-hidden="true">
+            <span><i class="fp-done"></i> Geschafft</span>
+            <span><i class="fp-missed"></i> Nicht geschafft</span>
+            <span><i class="fp-open"></i> Offen</span>
+          </div>
+
+          <p class="fp-note">
+            Gleiche Balkenskala für alle Ziele.
+            Ein Ziel antippen, um die Aufgabenhistorie zu öffnen.
+          </p>
+
+          <div class="fp-goal-list">
+            ${goals.map(goal => {
+              const s = summaries.get(goal.id);
+
+              return `
+                <button type="button" class="fp-goal-card"
+                  data-fp-goal="${esc(goal.id)}">
+
+                  <span class="fp-goal-heading">
+                    <strong>
+                      ${esc(emoji(goal, "goal"))} ${esc(goal.name)}
+                      ${goal.archived ? " · archiviert" : ""}
+                    </strong>
+                    <small>${s.total} Aufgaben ›</small>
+                  </span>
+
+                  ${bar(s, maximum)}
+
+                  <span class="fp-goal-counts">
+                    <span>✅ <b>${s.done}</b> geschafft</span>
+                    <span>❌ <b>${s.missed}</b> nicht geschafft</span>
+                    <span>📌 <b>${s.open}</b> offen</span>
+                  </span>
+
+                  <span class="fp-goal-footer">
+                    <span>🔁 ${s.worked} Bearbeitungen</span>
+                    <span>⏱️ ${esc(duration(s.time))}</span>
+                  </span>
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </section>
+        ${note()}
+      `;
+      return;
+    }
+
+    const s = summaries.get(selected.id);
+    const history = s.rows.slice().sort((a, b) =>
+      b.date.localeCompare(a.date) || a.name.localeCompare(b.name, "de")
+    );
+
+    const events = data.events.filter(event =>
+      goalIds(event).includes(selected.id) &&
+      event.start?.slice(0, 10) <= cutoff
+    ).sort((a, b) => b.start.localeCompare(a.start));
+
+    panel.innerHTML = `
+      <section class="card">
+        <button type="button" data-fp-back>← Alle Ziele</button>
+
+        <h2 style="margin-top:18px;overflow-wrap:anywhere">
+          ${esc(emoji(selected, "goal"))} ${esc(selected.name)}
+          ${selected.archived ? " · archiviert" : ""}
+        </h2>
+
+        ${cutoffControl()}
+
+        <div class="fp-goal-metrics">
+          ${metric(s.total, "📋 Aufgaben insgesamt")}
+          ${metric(s.done, "✅ Geschafft")}
+          ${metric(s.missed, "❌ Nicht geschafft")}
+          ${metric(s.open, "📌 Offen")}
+          ${metric(s.worked, "🔁 Bearbeitungen")}
+          ${metric(duration(s.time), "⏱️ Erfasste Zeit")}
+        </div>
+
+        ${bar(s, Math.max(1, s.total))}
+      </section>
+
+      <section class="card">
+        <h2>📋 Zugeordnete Aufgaben</h2>
+
+        ${history.length ? history.map(row => `
+          <article class="fp-history-row">
+            <strong>
+              ${esc(emoji(row, "task"))} ${esc(row.name)}
+            </strong>
+            <small>
+              ${esc(displayDate(row.date))}
+              · ${row.sessions?.length
+                ? esc(duration(timeMs(row)))
+                : "Zeit nicht erfasst"}
+            </small>
+            <span class="fp-history-status">${esc(status(row))}</span>
+          </article>
+        `).join("") : `
+          <p class="muted">
+            Bis zu diesem Datum sind keine Aufgaben zugeordnet.
+          </p>
+        `}
+      </section>
+
+      <section class="card">
+        <h2>📅 Zugeordnete Termine · ${events.length}</h2>
+        <p class="fp-note">
+          Termine zählen nicht als erledigte Aufgaben oder Arbeitszeit.
+        </p>
+
+        ${events.length ? events.map(event => `
+          <article class="fp-history-row">
+            <strong>
+              ${esc(emoji(event, "event"))} ${esc(event.name)}
+            </strong>
+            <small>
+              ${esc(displayDate(event.start.slice(0, 10)))}
+              · ${esc(event.start.slice(11, 16))}
+              –
+              ${event.end.slice(0, 10) !== event.start.slice(0, 10)
+                ? esc(displayDate(event.end.slice(0, 10))) + " "
+                : ""}
+              ${esc(event.end.slice(11, 16))}
+            </small>
+            <span class="fp-history-status">
+              ${event.archived ? "🗃️ Archiviert" : "📅 Termin"}
+            </span>
+          </article>
+        `).join("") : `
+          <p class="muted">Keine zugeordneten Termine.</p>
+        `}
+      </section>
+      ${note()}
+    `;
+  }
+
+  panel.addEventListener("click", event => {
+    const button = event.target.closest("[data-fp-goal]");
+
+    if (button) {
+      selectedGoalId = button.dataset.fpGoal;
+      renderGoalsView();
+      panel.scrollIntoView({ behavior: "auto", block: "start" });
+      return;
+    }
+
+    if (event.target.closest("[data-fp-back]")) {
+      selectedGoalId = null;
+      renderGoalsView();
+      panel.scrollIntoView({ behavior: "auto", block: "start" });
+    }
+  });
+
+  panel.addEventListener("change", event => {
+    if (event.target.id !== "fpGoalCutoff") return;
+
+    const value = event.target.value;
+
+    if (!validDay(value) ||
+        value < "2000-01-01" || value > "2100-12-31") {
+      event.target.value = cutoff;
+      return;
+    }
+
+    cutoff = value;
+    followToday = value === today();
+    renderGoalsView();
+  });
+
+  /* Aktualisierung nach Speichern, Statuswechsel und Online-Laden. */
+  const originalRenderStats = renderStats;
+
+  renderStats = function(...args) {
+    const result = originalRenderStats.apply(this, args);
+
+    if (active) {
+      showGoalView(true);
+      renderGoalsView();
+    }
+
+    return result;
+  };
+
+  showGoalView(false);
+})();
+</script>
 </body>
 </html>
