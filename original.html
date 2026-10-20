@@ -2878,5 +2878,1609 @@ document.addEventListener("visibilitychange", () => {
   compactHome();
 })();
 </script>
+<style>
+/* ===== Zielauswahl ===== */
+#fpGoalAssignment {
+  margin-top: 16px;
+  padding: 14px;
+  background: #101620;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+#fpGoalAssignment h3 {
+  margin: 0 0 8px;
+  font-size: .95rem;
+}
+.fp-goal-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.fp-goal-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: .8rem;
+  overflow-wrap: anywhere;
+}
+.fp-goal-options label:has(input:checked) {
+  border-color: var(--accent);
+  background: #ff914d12;
+}
+.fp-goal-options input {
+  flex: 0 0 auto;
+}
+#fpApplySeriesLabel {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: .75rem;
+  line-height: 1.5;
+}
+#fpApplySeriesLabel input {
+  margin-top: 4px;
+}
+
+/* ===== Statistik: Ziele ===== */
+#statistics.fp-goals-mode .fp-standard-stat,
+#statistics.fp-goals-mode .fp-standard-date {
+  display: none !important;
+}
+#goalStatisticsPanel {
+  margin-top: 16px;
+}
+.fp-note {
+  color: var(--muted);
+  font-size: .74rem;
+  line-height: 1.6;
+}
+.fp-cutoff {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: .8rem;
+}
+.fp-cutoff input {
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+}
+.fp-goal-list {
+  display: grid;
+  gap: 12px;
+}
+.fp-goal-card {
+  width: 100%;
+  padding: 16px;
+  text-align: left;
+  white-space: normal;
+  background: linear-gradient(135deg, #19212d, #141a24);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.fp-goal-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.fp-goal-heading strong {
+  min-width: 0;
+  font-size: .95rem;
+  overflow-wrap: anywhere;
+}
+.fp-goal-heading small {
+  flex-shrink: 0;
+}
+.fp-goal-bar {
+  display: flex;
+  overflow: hidden;
+  height: 12px;
+  background: #0d131d;
+  border-radius: 8px;
+}
+.fp-goal-bar span {
+  display: block;
+  height: 100%;
+}
+.fp-done { background: #66dab0; }
+.fp-missed { background: #ff8d9c; }
+.fp-open { background: #718099; }
+.fp-goal-counts,
+.fp-goal-footer,
+.fp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  color: var(--muted);
+  font-size: .75rem;
+}
+.fp-goal-counts {
+  margin-top: 12px;
+}
+.fp-goal-counts b {
+  color: var(--text);
+}
+.fp-goal-footer {
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  margin-top: 12px;
+}
+.fp-legend {
+  margin: 15px 0;
+}
+.fp-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.fp-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.fp-goal-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 15px 0;
+}
+.fp-goal-metrics > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #101620;
+}
+.fp-goal-metrics small {
+  display: block;
+  font-size: .67rem;
+}
+.fp-goal-metrics strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.2rem;
+  overflow-wrap: anywhere;
+}
+.fp-history-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+.fp-history-row:last-child {
+  border-bottom: 0;
+}
+.fp-history-row strong {
+  overflow-wrap: anywhere;
+  font-size: .87rem;
+}
+.fp-history-row small {
+  grid-column: 1;
+  font-size: .71rem;
+}
+.fp-history-status {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  max-width: 120px;
+  text-align: right;
+  font-size: .72rem;
+}
+@media (max-width: 480px) {
+  .fp-goal-options {
+    grid-template-columns: 1fr;
+  }
+  .fp-goal-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .fp-goal-card {
+    padding: 14px;
+  }
+}
+</style>
+
+<script>
+(() => {
+  "use strict";
+
+  /* Diese Erweiterung nur einmal ausführen. */
+  if (document.getElementById("goalStatisticsPanel")) return;
+
+  const el = id => document.getElementById(id);
+
+  if (
+    typeof commit !== "function" ||
+    typeof occurrence !== "function" ||
+    typeof openEditor !== "function" ||
+    typeof renderStats !== "function"
+  ) {
+    console.error("Zielerweiterung: FokusPlan-Hauptcode fehlt.");
+    return;
+  }
+
+  /* Alte Einzelauswahl und neue Mehrfachauswahl unterstützen. */
+  function goalIds(item) {
+    const values = Array.isArray(item?.goalIds)
+      ? item.goalIds
+      : [item?.goalId];
+
+    return [...new Set(values.filter(
+      value => typeof value === "string" && value
+    ))];
+  }
+
+  function assignGoals(item, ids) {
+    item.goalIds = [...new Set(ids)];
+    item.goalId = item.goalIds[0] || "";
+  }
+
+  function timeMs(record) {
+    return (record.sessions || []).reduce((sum, session) =>
+      sum + (
+        session.manual
+          ? session.ms
+          : Math.max(0, session.end - session.start)
+      ), 0);
+  }
+
+  /*
+   * Wiederholungen übernehmen alle Ziele ihrer Aufgabenserie.
+   * Vorhandene gespeicherte Durchführungen bleiben unverändert.
+   */
+  const originalOccurrence = occurrence;
+
+  occurrence = function(task, date) {
+    const record = originalOccurrence(task, date);
+    assignGoals(record, goalIds(task));
+    return record;
+  };
+
+  /* ===== Mehrfachauswahl im bestehenden Editor ===== */
+
+  const assignment = document.createElement("section");
+  assignment.id = "fpGoalAssignment";
+  assignment.className = "hidden";
+  assignment.innerHTML = `
+    <h3>🎯 Zugehörige Ziele</h3>
+    <small>Wähle nur Ziele, die dieser Eintrag tatsächlich unterstützt.</small>
+    <div id="fpGoalOptions" class="fp-goal-options"></div>
+
+    <label id="fpApplySeriesLabel" class="hidden">
+      <input id="fpApplySeries" type="checkbox">
+      <span>
+        Zielzuordnung für die ganze Serie übernehmen,
+        einschließlich bisheriger Durchführungen.
+      </span>
+    </label>
+  `;
+
+  el("formError").before(assignment);
+
+  const originalOpenEditor = openEditor;
+
+  openEditor = function(type, id = "") {
+    originalOpenEditor(type, id);
+
+    if (!el("editor").open) return;
+
+    const supported = type === "task" || type === "event";
+    assignment.classList.toggle("hidden", !supported);
+
+    const oldGoalLabel = el("editGoal")?.closest("label");
+    if (oldGoalLabel) oldGoalLabel.hidden = supported;
+
+    if (!supported) return;
+
+    let item = {};
+    let series = false;
+
+    if (id && type === "task") {
+      item = findOccurrence(id);
+      series = Boolean(
+        data.tasks.find(task => task.id === item.taskId)?.repeat
+      );
+    }
+
+    if (id && type === "event") {
+      item = data.events.find(event => event.id === id) || {};
+    }
+
+    const selected = new Set(goalIds(item));
+    const goals = data.goals.filter(
+      goal => !goal.archived || selected.has(goal.id)
+    );
+
+    el("fpGoalOptions").innerHTML = goals.length
+      ? goals.map(goal => `
+          <label>
+            <input
+              type="checkbox"
+              name="fpLinkedGoal"
+              value="${esc(goal.id)}"
+              ${selected.has(goal.id) ? "checked" : ""}
+            >
+            <span>
+              ${esc(emoji(goal, "goal"))} ${esc(goal.name)}
+              ${goal.archived ? " · archiviert" : ""}
+            </span>
+          </label>
+        `).join("")
+      : "<small>Noch keine Ziele gespeichert.</small>";
+
+    el("fpApplySeries").checked = false;
+    el("fpApplySeriesLabel").classList.toggle("hidden", !series);
+  };
+
+  /*
+   * Die vorhandene Formularvalidierung und Speicherung bleiben zuständig.
+   * Für genau diesen Speichervorgang werden die Zielzuordnungen ergänzt.
+   */
+  let pendingGoalSave = null;
+
+  el("editForm").addEventListener("submit", () => {
+    const type = el("editType").value;
+    if (!["task", "event"].includes(type)) return;
+
+    const ids = [...assignment.querySelectorAll(
+      'input[name="fpLinkedGoal"]:checked'
+    )].map(input => input.value);
+
+    const context = {
+      type,
+      id: el("editId").value,
+      ids,
+      applySeries:
+        type === "task" &&
+        !el("fpApplySeriesLabel").classList.contains("hidden") &&
+        el("fpApplySeries").checked
+    };
+
+    /* Primäres Ziel auch an den vorhandenen Formularcode weitergeben. */
+    if (type === "task") {
+      el("editGoal").value = ids[0] || "";
+    }
+
+    pendingGoalSave = context;
+
+    /* Bei Validierungsfehlern keine Zuordnung für spätere Aktionen behalten. */
+    queueMicrotask(() => {
+      if (pendingGoalSave === context) pendingGoalSave = null;
+    });
+  }, true);
+
+  const originalCommit = commit;
+
+  commit = function(change) {
+    const context = pendingGoalSave;
+    pendingGoalSave = null;
+
+    if (!context) return originalCommit(change);
+
+    return originalCommit(draft => {
+      const oldTaskIds = new Set(draft.tasks.map(task => task.id));
+      const oldEventIds = new Set(draft.events.map(event => event.id));
+
+      change(draft);
+
+      if (context.type === "event") {
+        const event = context.id
+          ? draft.events.find(item => item.id === context.id)
+          : draft.events.find(item => !oldEventIds.has(item.id));
+
+        if (!event) throw Error("Termin für Zielzuordnung nicht gefunden.");
+        assignGoals(event, context.ids);
+        return;
+      }
+
+      if (context.id) {
+        const record = draft.focusV2.records[context.id];
+
+        if (!record) {
+          throw Error("Aufgabendurchführung für Zielzuordnung nicht gefunden.");
+        }
+
+        assignGoals(record, context.ids);
+
+        if (context.applySeries) {
+          const task = draft.tasks.find(
+            item => item.id === record.taskId
+          );
+
+          if (!task) throw Error("Aufgabenserie nicht gefunden.");
+
+          assignGoals(task, context.ids);
+
+          for (const entry of Object.values(draft.focusV2.records)) {
+            if (entry.taskId === task.id) {
+              assignGoals(entry, context.ids);
+            }
+          }
+        }
+      } else {
+        const task = draft.tasks.find(
+          item => !oldTaskIds.has(item.id)
+        );
+
+        if (!task) throw Error("Neue Aufgabe nicht gefunden.");
+
+        assignGoals(task, context.ids);
+
+        for (const record of Object.values(draft.focusV2.records)) {
+          if (record.taskId === task.id) {
+            assignGoals(record, context.ids);
+          }
+        }
+      }
+    });
+  };
+
+  /* ===== Vierte Statistikansicht ===== */
+
+  const statistics = el("statistics");
+  const buttons = el("periodButtons");
+  const toolbar = buttons.closest(".card");
+
+  const goalButton = document.createElement("button");
+  goalButton.type = "button";
+  goalButton.id = "fpGoalViewButton";
+  goalButton.textContent = "🎯 Ziele";
+  goalButton.setAttribute("aria-pressed", "false");
+  buttons.appendChild(goalButton);
+
+  for (const child of [...statistics.children]) {
+    if (child !== toolbar && child.tagName !== "H1") {
+      child.classList.add("fp-standard-stat");
+    }
+  }
+
+  for (const child of [...toolbar.children]) {
+    if (child !== buttons) child.classList.add("fp-standard-date");
+  }
+
+  const panel = document.createElement("section");
+  panel.id = "goalStatisticsPanel";
+  panel.className = "hidden";
+  statistics.appendChild(panel);
+
+  let active = false;
+  let selectedGoalId = null;
+  let cutoff = today();
+  let followToday = true;
+
+  function showGoalView(value) {
+    active = value;
+    statistics.classList.toggle("fp-goals-mode", value);
+    panel.classList.toggle("hidden", !value);
+    goalButton.classList.toggle("active", value);
+    goalButton.setAttribute("aria-pressed", String(value));
+
+    if (value) {
+      buttons.querySelectorAll('[data-action="period"]').forEach(
+        button => button.classList.remove("active")
+      );
+    }
+  }
+
+  goalButton.addEventListener("click", () => {
+    selectedGoalId = null;
+    showGoalView(true);
+    renderGoalsView();
+  });
+
+  buttons.addEventListener("click", event => {
+    if (event.target.closest('[data-action="period"]')) {
+      showGoalView(false);
+    }
+  }, true);
+
+  function summarize(id, rows) {
+    const linked = rows.filter(row => goalIds(row).includes(id));
+
+    return {
+      rows: linked,
+      total: linked.length,
+      done: linked.filter(row => row.status === "done").length,
+      missed: linked.filter(row => row.status === "missed").length,
+      open: linked.filter(row => row.status === "open").length,
+      worked: linked.filter(
+        row => row.status === "done" || timeMs(row) > 0
+      ).length,
+      time: linked.reduce((sum, row) => sum + timeMs(row), 0)
+    };
+  }
+
+  function bar(summary, maximum) {
+    const width = value => value / Math.max(1, maximum) * 100;
+
+    return `
+      <div class="fp-goal-bar" role="img"
+        aria-label="${summary.done} geschafft,
+        ${summary.missed} nicht geschafft,
+        ${summary.open} offen">
+        <span class="fp-done"
+          style="width:${width(summary.done)}%"></span>
+        <span class="fp-missed"
+          style="width:${width(summary.missed)}%"></span>
+        <span class="fp-open"
+          style="width:${width(summary.open)}%"></span>
+      </div>
+    `;
+  }
+
+  function metric(value, label) {
+    return `<div>
+      <small>${esc(label)}</small>
+      <strong>${esc(value)}</strong>
+    </div>`;
+  }
+
+  function status(row) {
+    if (row.status === "done") return "✅ Geschafft";
+    if (row.status === "missed") return "❌ Nicht geschafft";
+    return row.date < today() ? "⏳ Überfällig" : "📌 Offen";
+  }
+
+  function cutoffControl() {
+    return `
+      <label class="fp-cutoff">
+        <span>Aufgaben bis einschließlich</span>
+        <input id="fpGoalCutoff" type="date"
+          min="2000-01-01" max="2100-12-31"
+          value="${esc(cutoff)}">
+      </label>
+    `;
+  }
+
+  function note() {
+    return `
+      <p class="fp-note">
+        Jede Wiederholung zählt als eigene Durchführung.
+        Gezählt wird nach geplantem Aufgabentag bis zum gewählten Datum.
+        Eine Bearbeitung bedeutet: geschafft oder gespeicherte Zeit vorhanden.
+        Pro Durchführung wird sie einmal gezählt.
+        Laufende Timerzeit wird erst nach Stopp oder Beenden berücksichtigt.
+        Die angezeigte Zeit ist die gespeicherte Gesamtzeit dieser Durchführungen.
+        Bei mehreren Zielzuordnungen erscheint dieselbe Aufgabe in jedem
+        passenden Ziel. Die Zielwerte deshalb nicht zu einer
+        eindeutigen Gesamtsumme addieren.
+      </p>
+    `;
+  }
+
+  function renderGoalsView() {
+    if (!active) return;
+    if (followToday) cutoff = today();
+
+    const goals = data.goals;
+    const rows = occurrences(cutoff);
+
+    if (!goals.length) {
+      panel.innerHTML = `
+        <section class="card">
+          <h2>🎯 Ziele vergleichen</h2>
+          <p class="muted">Noch keine Ziele gespeichert.</p>
+        </section>
+      `;
+      return;
+    }
+
+    const summaries = new Map(
+      goals.map(goal => [goal.id, summarize(goal.id, rows)])
+    );
+
+    const maximum = Math.max(
+      1, ...[...summaries.values()].map(item => item.total)
+    );
+
+    const selected = goals.find(goal => goal.id === selectedGoalId);
+
+    if (!selected) {
+      selectedGoalId = null;
+
+      panel.innerHTML = `
+        <section class="card">
+          <h2>🎯 Ziele vergleichen</h2>
+          ${cutoffControl()}
+
+          <div class="fp-legend" aria-hidden="true">
+            <span><i class="fp-done"></i> Geschafft</span>
+            <span><i class="fp-missed"></i> Nicht geschafft</span>
+            <span><i class="fp-open"></i> Offen</span>
+          </div>
+
+          <p class="fp-note">
+            Gleiche Balkenskala für alle Ziele.
+            Ein Ziel antippen, um die Aufgabenhistorie zu öffnen.
+          </p>
+
+          <div class="fp-goal-list">
+            ${goals.map(goal => {
+              const s = summaries.get(goal.id);
+
+              return `
+                <button type="button" class="fp-goal-card"
+                  data-fp-goal="${esc(goal.id)}">
+
+                  <span class="fp-goal-heading">
+                    <strong>
+                      ${esc(emoji(goal, "goal"))} ${esc(goal.name)}
+                      ${goal.archived ? " · archiviert" : ""}
+                    </strong>
+                    <small>${s.total} Aufgaben ›</small>
+                  </span>
+
+                  ${bar(s, maximum)}
+
+                  <span class="fp-goal-counts">
+                    <span>✅ <b>${s.done}</b> geschafft</span>
+                    <span>❌ <b>${s.missed}</b> nicht geschafft</span>
+                    <span>📌 <b>${s.open}</b> offen</span>
+                  </span>
+
+                  <span class="fp-goal-footer">
+                    <span>🔁 ${s.worked} Bearbeitungen</span>
+                    <span>⏱️ ${esc(duration(s.time))}</span>
+                  </span>
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </section>
+        ${note()}
+      `;
+      return;
+    }
+
+    const s = summaries.get(selected.id);
+    const history = s.rows.slice().sort((a, b) =>
+      b.date.localeCompare(a.date) || a.name.localeCompare(b.name, "de")
+    );
+
+    const events = data.events.filter(event =>
+      goalIds(event).includes(selected.id) &&
+      event.start?.slice(0, 10) <= cutoff
+    ).sort((a, b) => b.start.localeCompare(a.start));
+
+    panel.innerHTML = `
+      <section class="card">
+        <button type="button" data-fp-back>← Alle Ziele</button>
+
+        <h2 style="margin-top:18px;overflow-wrap:anywhere">
+          ${esc(emoji(selected, "goal"))} ${esc(selected.name)}
+          ${selected.archived ? " · archiviert" : ""}
+        </h2>
+
+        ${cutoffControl()}
+
+        <div class="fp-goal-metrics">
+          ${metric(s.total, "📋 Aufgaben insgesamt")}
+          ${metric(s.done, "✅ Geschafft")}
+          ${metric(s.missed, "❌ Nicht geschafft")}
+          ${metric(s.open, "📌 Offen")}
+          ${metric(s.worked, "🔁 Bearbeitungen")}
+          ${metric(duration(s.time), "⏱️ Erfasste Zeit")}
+        </div>
+
+        ${bar(s, Math.max(1, s.total))}
+      </section>
+
+      <section class="card">
+        <h2>📋 Zugeordnete Aufgaben</h2>
+
+        ${history.length ? history.map(row => `
+          <article class="fp-history-row">
+            <strong>
+              ${esc(emoji(row, "task"))} ${esc(row.name)}
+            </strong>
+            <small>
+              ${esc(displayDate(row.date))}
+              · ${row.sessions?.length
+                ? esc(duration(timeMs(row)))
+                : "Zeit nicht erfasst"}
+            </small>
+            <span class="fp-history-status">${esc(status(row))}</span>
+          </article>
+        `).join("") : `
+          <p class="muted">
+            Bis zu diesem Datum sind keine Aufgaben zugeordnet.
+          </p>
+        `}
+      </section>
+
+      <section class="card">
+        <h2>📅 Zugeordnete Termine · ${events.length}</h2>
+        <p class="fp-note">
+          Termine zählen nicht als erledigte Aufgaben oder Arbeitszeit.
+        </p>
+
+        ${events.length ? events.map(event => `
+          <article class="fp-history-row">
+            <strong>
+              ${esc(emoji(event, "event"))} ${esc(event.name)}
+            </strong>
+            <small>
+              ${esc(displayDate(event.start.slice(0, 10)))}
+              · ${esc(event.start.slice(11, 16))}
+              –
+              ${event.end.slice(0, 10) !== event.start.slice(0, 10)
+                ? esc(displayDate(event.end.slice(0, 10))) + " "
+                : ""}
+              ${esc(event.end.slice(11, 16))}
+            </small>
+            <span class="fp-history-status">
+              ${event.archived ? "🗃️ Archiviert" : "📅 Termin"}
+            </span>
+          </article>
+        `).join("") : `
+          <p class="muted">Keine zugeordneten Termine.</p>
+        `}
+      </section>
+      ${note()}
+    `;
+  }
+
+  panel.addEventListener("click", event => {
+    const button = event.target.closest("[data-fp-goal]");
+
+    if (button) {
+      selectedGoalId = button.dataset.fpGoal;
+      renderGoalsView();
+      panel.scrollIntoView({ behavior: "auto", block: "start" });
+      return;
+    }
+
+    if (event.target.closest("[data-fp-back]")) {
+      selectedGoalId = null;
+      renderGoalsView();
+      panel.scrollIntoView({ behavior: "auto", block: "start" });
+    }
+  });
+
+  panel.addEventListener("change", event => {
+    if (event.target.id !== "fpGoalCutoff") return;
+
+    const value = event.target.value;
+
+    if (!validDay(value) ||
+        value < "2000-01-01" || value > "2100-12-31") {
+      event.target.value = cutoff;
+      return;
+    }
+
+    cutoff = value;
+    followToday = value === today();
+    renderGoalsView();
+  });
+
+  /* Aktualisierung nach Speichern, Statuswechsel und Online-Laden. */
+  const originalRenderStats = renderStats;
+
+  renderStats = function(...args) {
+    const result = originalRenderStats.apply(this, args);
+
+    if (active) {
+      showGoalView(true);
+      renderGoalsView();
+    }
+
+    return result;
+  };
+
+  showGoalView(false);
+})();
+</script>
+<script>
+(() => {
+  "use strict";
+
+  if (document.getElementById("deleteEntryDialog")) return;
+
+  /* Den zuvor vorgeschlagenen Komplettlösch-Button entfernen. */
+  document.getElementById("resetPlanningData")?.remove();
+
+  const dialog = document.createElement("dialog");
+  dialog.id = "deleteEntryDialog";
+  dialog.setAttribute("aria-labelledby", "deleteEntryTitle");
+  dialog.style.cssText =
+    "width:min(440px,calc(100vw - 32px));padding:24px;" +
+    "border:1px solid #394151;border-radius:20px;" +
+    "background:#141a24;color:#f5f7fb";
+
+  dialog.innerHTML = `
+    <h2 id="deleteEntryTitle">🗑️ Eintrag löschen?</h2>
+    <p id="deleteEntryName"
+       style="font-weight:700;overflow-wrap:anywhere"></p>
+
+    <label id="deleteEntryScopeLabel" class="hidden">
+      Umfang
+      <select id="deleteEntryScope">
+        <option value="one">Nur diese Durchführung</option>
+        <option value="series">Gesamte Aufgabenserie</option>
+      </select>
+    </label>
+
+    <p id="deleteEntryExplanation"
+       style="color:#b3bdcd;font-size:.85rem;line-height:1.6"></p>
+
+    <p id="deleteEntryError" role="alert"
+       style="color:#ff8d9c"></p>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button type="button" id="deleteEntryCancel">Abbrechen</button>
+      <button type="button" id="deleteEntryConfirm"
+        style="background:#cf3650;color:white;border:0">
+        🗑️ Löschen
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+
+  const field = id => document.getElementById(id);
+  let pending = null;
+  let saving = false;
+
+  /*
+   * Bei einer wiederkehrenden Aufgabe wird nur das ausgeschlossene
+   * Ursprungsdatum gespeichert. Name, Status und Zeitdaten der
+   * gelöschten Durchführung werden entfernt.
+   */
+  const previousOccurrences = occurrences;
+  occurrences = function(until = today(), source = data) {
+    const excluded = new Set();
+
+    for (const task of source.tasks) {
+      for (const date of task.deletedDates || []) {
+        excluded.add(task.id + "@" + date);
+      }
+    }
+
+    return previousOccurrences(until, source)
+      .filter(item => !excluded.has(item.key));
+  };
+
+  function removeTask(draft, taskId) {
+    const records = draft.focusV2.records;
+    const removedKeys = new Set();
+
+    for (const [key, record] of Object.entries(records)) {
+      if (record.taskId === taskId) {
+        removedKeys.add(key);
+        delete records[key];
+      }
+    }
+
+    const timerKey = draft.focusV2.timer?.key;
+    if (
+      timerKey &&
+      (removedKeys.has(timerKey) || timerKey.startsWith(taskId + "@"))
+    ) {
+      draft.focusV2.timer = null;
+    }
+
+    draft.tasks = draft.tasks.filter(task => task.id !== taskId);
+    draft.log = draft.log.filter(entry => entry.taskId !== taskId);
+  }
+
+  function removeGoalLink(item, goalId) {
+    if (Array.isArray(item.goalIds)) {
+      item.goalIds = item.goalIds.filter(id => id !== goalId);
+    }
+
+    if (item.goalId === goalId) {
+      item.goalId = item.goalIds?.[0] || "";
+    }
+  }
+
+  function explanation() {
+    if (!pending) return;
+
+    const wholeSeries =
+      pending.kind === "task" ||
+      (pending.repeating && field("deleteEntryScope").value === "series");
+
+    field("deleteEntryExplanation").textContent =
+      pending.kind === "goal"
+        ? "Das Ziel wird endgültig gelöscht. Zugeordnete Aufgaben und " +
+          "Termine bleiben bestehen; die Verbindung zu diesem Ziel entfällt."
+        : pending.kind === "event"
+        ? "Dieser Termin wird endgültig gelöscht."
+        : wholeSeries
+        ? "Die gesamte Aufgabe beziehungsweise Serie wird endgültig " +
+          "gelöscht – einschließlich vergangener und zukünftiger " +
+          "Durchführungen, erfasster Zeiten und Statistikdaten."
+        : "Diese Durchführung wird endgültig gelöscht, einschließlich " +
+          "ihrer Zeit- und Statistikdaten. Andere Wiederholungen bleiben bestehen.";
+  }
+
+  function openDelete(kind, id) {
+    if (!ready || busy || !user) {
+      toast("Bitte zuerst anmelden und die Online-Daten aktualisieren.");
+      return;
+    }
+
+    if (dialog.open) return;
+
+    let item;
+    let task;
+
+    if (kind === "occurrence") {
+      item = findOccurrence(id);
+      task = data.tasks.find(t => t.id === item.taskId);
+    } else {
+      const collection =
+        kind === "task" ? data.tasks :
+        kind === "event" ? data.events : data.goals;
+
+      item = collection.find(entry => entry.id === id);
+    }
+
+    if (!item) {
+      toast("Dieser Eintrag wurde nicht gefunden.");
+      return;
+    }
+
+    pending = {
+      kind,
+      id,
+      taskId: task?.id,
+      repeating: Boolean(task?.repeat),
+      userId: user.id
+    };
+
+    field("deleteEntryName").textContent =
+      item.name +
+      (kind === "occurrence" ? " · " + displayDate(item.date) : "");
+
+    field("deleteEntryScope").value = "one";
+    field("deleteEntryScopeLabel").classList.toggle(
+      "hidden", !pending.repeating
+    );
+
+    field("deleteEntryError").textContent = "";
+    explanation();
+    dialog.showModal();
+    field("deleteEntryCancel").focus();
+  }
+
+  field("deleteEntryScope").addEventListener("change", explanation);
+
+  field("deleteEntryCancel").addEventListener("click", () => {
+    if (!saving) dialog.close();
+  });
+
+  dialog.addEventListener("cancel", event => {
+    if (saving) event.preventDefault();
+  });
+
+  dialog.addEventListener("close", () => {
+    pending = null;
+  });
+
+  field("deleteEntryConfirm").addEventListener("click", async () => {
+    if (!pending || saving) return;
+
+    if (!ready || busy || user?.id !== pending.userId) {
+      field("deleteEntryError").textContent =
+        "Bitte mit demselben Konto anmelden und die Daten aktualisieren.";
+      return;
+    }
+
+    const request = { ...pending };
+    const scope = field("deleteEntryScope").value;
+    saving = true;
+
+    field("deleteEntryConfirm").disabled = true;
+    field("deleteEntryCancel").disabled = true;
+    field("deleteEntryScope").disabled = true;
+
+    try {
+      const success = await commit(draft => {
+        if (request.kind === "task") {
+          removeTask(draft, request.id);
+          return;
+        }
+
+        if (request.kind === "occurrence") {
+          const separator = request.id.lastIndexOf("@");
+          const taskId = request.id.slice(0, separator);
+          const originalDate = request.id.slice(separator + 1);
+          const task = draft.tasks.find(t => t.id === taskId);
+
+          if (task && (!task.repeat || scope === "series")) {
+            removeTask(draft, taskId);
+            return;
+          }
+
+          if (task) {
+            task.deletedDates = [
+              ...new Set([...(task.deletedDates || []), originalDate])
+            ];
+          }
+
+          delete draft.focusV2.records[request.id];
+
+          if (draft.focusV2.timer?.key === request.id) {
+            draft.focusV2.timer = null;
+          }
+
+          draft.log = draft.log.filter(entry =>
+            entry.key !== request.id &&
+            entry.occurrenceKey !== request.id
+          );
+          return;
+        }
+
+        if (request.kind === "event") {
+          draft.events = draft.events.filter(e => e.id !== request.id);
+          return;
+        }
+
+        if (request.kind === "goal") {
+          draft.goals = draft.goals.filter(g => g.id !== request.id);
+
+          for (const item of [
+            ...draft.tasks,
+            ...draft.events,
+            ...Object.values(draft.focusV2.records),
+            ...draft.log
+          ]) {
+            removeGoalLink(item, request.id);
+          }
+        }
+      });
+
+      if (success) {
+        dialog.close();
+        toast("✅ Endgültig gelöscht und online gespeichert.");
+      } else {
+        field("deleteEntryError").textContent =
+          "Die Löschung wurde nicht bestätigt. Bitte abbrechen, " +
+          "Online-Daten aktualisieren und den Eintrag prüfen.";
+      }
+    } catch (error) {
+      field("deleteEntryError").textContent = error.message;
+    } finally {
+      saving = false;
+      field("deleteEntryConfirm").disabled = false;
+      field("deleteEntryCancel").disabled = false;
+      field("deleteEntryScope").disabled = false;
+    }
+  });
+
+  /*
+   * Die bisherige Archivansicht wird zur Eintragsverwaltung.
+   * Auch alte ausgeblendete Einträge sind einzeln löschbar.
+   * Es gibt keine Archivieren- oder Wiederherstellen-Aktionen mehr.
+   */
+  renderArchive = function() {
+    const container = field("seriesList");
+    if (!container) return;
+
+    const summary = container.closest("details")?.querySelector("summary");
+    if (summary) summary.textContent = "📋 Einträge verwalten";
+
+    const groups = [
+      ["task", "✅ Aufgaben und Serien", data.tasks],
+      ["event", "📅 Termine", data.events],
+      ["goal", "🎯 Ziele", data.goals]
+    ];
+
+    container.innerHTML = groups.map(([kind, title, items]) => {
+      if (!items.length) return "";
+
+      return `<h3>${esc(title)}</h3>` + items.map(item => `
+        <article class="item">
+          <div class="body">
+            <b>${esc(emoji(item, kind))} ${esc(item.name)}</b>
+            <small>
+              ${kind === "task" ? esc(repeatText(item)) : ""}
+              ${kind === "event" && item.start
+                ? esc(displayDate(item.start.slice(0, 10))) +
+                  " · " + esc(item.start.slice(11, 16))
+                : ""}
+              ${item.archiveDate || item.archived
+                ? " · bisher ausgeblendet" : ""}
+            </small>
+          </div>
+          ${actionButton(
+            "delete-" + kind,
+            "🗑️",
+            item.id,
+            kind === "task"
+              ? "Gesamte Aufgabe oder Serie löschen"
+              : "Eintrag löschen"
+          )}
+        </article>
+      `).join("");
+    }).join("") || '<div class="empty">Keine Einträge vorhanden.</div>';
+  };
+
+  /* Bestehende Papierkorb-Buttons erhalten passende Beschriftungen. */
+  const previousActionButton = actionButton;
+  actionButton = function(action, label, id = "", title = "", extra = "") {
+    const titles = {
+      "cancel-task": "Diese Durchführung löschen",
+      "archive-task": "Gesamte Aufgabe oder Serie löschen",
+      "archive-event": "Termin löschen",
+      "archive-goal": "Ziel löschen"
+    };
+
+    return previousActionButton(
+      action, label, id, titles[action] || title, extra
+    );
+  };
+
+  /*
+   * Vor den bisherigen Klickhandlern abfangen, damit deren
+   * Archivierungslogik und confirm()-Fenster nicht mehr ausgeführt werden.
+   */
+  document.addEventListener("click", event => {
+    const button = event.target.closest?.("button[data-action]");
+    if (!button) return;
+
+    const kinds = {
+      "cancel-task": "occurrence",
+      "archive-task": "task",
+      "archive-event": "event",
+      "archive-goal": "goal",
+      "delete-task": "task",
+      "delete-event": "event",
+      "delete-goal": "goal"
+    };
+
+    const action = button.dataset.action;
+
+    if (["restore-task", "restore-event", "restore-goal"].includes(action)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+
+    if (!kinds[action]) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    try {
+      openDelete(kinds[action], button.dataset.id);
+    } catch (error) {
+      toast(error.message);
+    }
+  }, true);
+
+  if (ready) render();
+})();
+</script>
+<script>
+(() => {
+  "use strict";
+
+  if (document.getElementById("eventRecurrenceFields")) return;
+
+  const el = id => document.getElementById(id);
+  const weekdays = [
+    [1, "Mo"], [2, "Di"], [3, "Mi"], [4, "Do"],
+    [5, "Fr"], [6, "Sa"], [0, "So"]
+  ];
+
+  const box = document.createElement("section");
+  box.id = "eventRecurrenceFields";
+  box.style.cssText =
+    "margin-top:16px;padding:14px;border:1px solid #394151;" +
+    "border-radius:14px;background:#101620";
+
+  box.innerHTML = `
+    <label>
+      🔁 Wiederholung
+      <select id="eventFrequency">
+        <option value="">Einmalig</option>
+        <option value="daily">Täglich</option>
+        <option value="weekly">Wöchentlich</option>
+        <option value="monthly">Monatlich</option>
+      </select>
+    </label>
+
+    <div id="eventRecurrenceOptions" class="hidden">
+      <label>
+        Abstand
+        <div style="display:flex;align-items:center;gap:10px">
+          <span>Alle</span>
+          <input id="eventFrequencyInterval"
+            type="number" min="1" max="365" step="1" value="1"
+            style="width:90px">
+          <span id="eventIntervalUnit">Wochen</span>
+        </div>
+      </label>
+
+      <fieldset id="eventWeekdays"
+        style="border:0;padding:0;margin:14px 0">
+        <legend style="font-size:.85rem">An diesen Tagen</legend>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${weekdays.map(([value, label]) => `
+            <label style="display:flex;align-items:center;gap:5px;
+                          padding:8px;margin:0">
+              <input type="checkbox" name="eventWeekday"
+                value="${value}" style="width:auto;margin:0">
+              ${label}
+            </label>
+          `).join("")}
+        </div>
+      </fieldset>
+
+      <label>
+        Letzte Wiederholung · leer = unbegrenzt
+        <input id="eventRecurrenceUntil" type="date">
+      </label>
+
+      <p id="eventMonthlyHint" class="hidden"
+        style="font-size:.78rem;color:#b3bdcd">
+        Fehlt der gewählte Tag in einem Monat, wird dessen letzter
+        Tag verwendet. Beispiel: 31. Januar → 28. Februar → 31. März.
+      </p>
+
+      <p style="font-size:.78rem;color:#b3bdcd;line-height:1.5">
+        Europe/Berlin · gleiche Ortszeit auch nach der Zeitumstellung.
+        Bearbeiten und Löschen gelten für die gesamte Serie.
+        Ferien und Feiertage werden nicht automatisch ausgenommen.
+      </p>
+    </div>
+  `;
+
+  el("eventFields").appendChild(box);
+
+  function updateFields() {
+    const frequency = el("eventFrequency").value;
+    const active = Boolean(frequency);
+
+    el("eventRecurrenceOptions").classList.toggle("hidden", !active);
+    el("eventWeekdays").classList.toggle(
+      "hidden", frequency !== "weekly"
+    );
+    el("eventMonthlyHint").classList.toggle(
+      "hidden", frequency !== "monthly"
+    );
+
+    el("eventIntervalUnit").textContent = {
+      daily: "Tage",
+      weekly: "Wochen",
+      monthly: "Monate"
+    }[frequency] || "";
+
+    el("eventFrequencyInterval").disabled = !active;
+    el("eventRecurrenceUntil").disabled = !active;
+
+    box.querySelectorAll('[name="eventWeekday"]').forEach(input => {
+      input.disabled = frequency !== "weekly";
+    });
+
+    el("eventRecurrenceUntil").min =
+      el("editStart").value.slice(0, 10);
+  }
+
+  el("eventFrequency").addEventListener("change", updateFields);
+  el("editStart").addEventListener("change", updateFields);
+
+  /*
+   * Das bestehende Formular bleibt erhalten, einschließlich
+   * Emoji-Vorschlägen und Zielzuordnung.
+   */
+  const previousOpenEditor = openEditor;
+
+  openEditor = function(type, id = "") {
+    previousOpenEditor(type, id);
+
+    if (type !== "event") return;
+
+    const item = id
+      ? data.events.find(event => event.id === id)
+      : null;
+
+    const recurrence = item?.recurrence;
+    const startDay = el("editStart").value.slice(0, 10);
+
+    el("eventFrequency").value = recurrence?.frequency || "";
+    el("eventFrequencyInterval").value = recurrence?.interval || 1;
+    el("eventRecurrenceUntil").value = recurrence?.until || "";
+
+    const selected = recurrence?.weekdays || [weekday(startDay)];
+
+    box.querySelectorAll('[name="eventWeekday"]').forEach(input => {
+      input.checked = selected.includes(Number(input.value));
+    });
+
+    updateFields();
+
+    if (recurrence) {
+      el("editorTitle").textContent = "✏️ Gesamte Terminserie bearbeiten";
+    }
+  };
+
+  function readRecurrence() {
+    const frequency = el("eventFrequency").value;
+    if (!frequency) return null;
+
+    const interval = Number(el("eventFrequencyInterval").value);
+    const startDay = el("editStart").value.slice(0, 10);
+    const until = el("eventRecurrenceUntil").value;
+
+    if (!Number.isInteger(interval) || interval < 1 || interval > 365) {
+      throw Error("Bitte einen Abstand zwischen 1 und 365 eingeben.");
+    }
+
+    if (!validDay(startDay)) {
+      throw Error("Bitte ein gültiges Startdatum eingeben.");
+    }
+
+    if (until && (!validDay(until) || until < startDay)) {
+      throw Error("Das Wiederholungsende darf nicht vor dem Beginn liegen.");
+    }
+
+    const selectedDays = [
+      ...box.querySelectorAll('[name="eventWeekday"]:checked')
+    ].map(input => Number(input.value));
+
+    if (frequency === "weekly" && !selectedDays.length) {
+      throw Error("Bitte mindestens einen Wochentag auswählen.");
+    }
+
+    return {
+      frequency,
+      interval,
+      weekdays: frequency === "weekly" ? selectedDays : [],
+      until,
+      timezone: "Europe/Berlin"
+    };
+  }
+
+  /*
+   * Validierung vor den vorhandenen Formularhandlern.
+   * Eine Serie wird als einzelner Datensatz gespeichert.
+   */
+  el("editForm").addEventListener("submit", event => {
+    if (el("editType").value !== "event") return;
+
+    try {
+      readRecurrence();
+    } catch (error) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      el("formError").textContent = error.message;
+    }
+  }, true);
+
+  const previousCommit = commit;
+
+  commit = async function(change) {
+    const editingEvent =
+      el("editor").open && el("editType").value === "event";
+
+    if (!editingEvent) return previousCommit(change);
+
+    let recurrence;
+
+    try {
+      recurrence = readRecurrence();
+    } catch (error) {
+      el("formError").textContent = error.message;
+      return false;
+    }
+
+    const editingId = el("editId").value;
+
+    return previousCommit(draft => {
+      const previousIds = new Set(draft.events.map(event => event.id));
+
+      change(draft);
+
+      const item = editingId
+        ? draft.events.find(event => event.id === editingId)
+        : draft.events.find(event => !previousIds.has(event.id));
+
+      if (!item) return;
+
+      if (recurrence) {
+        item.recurrence = JSON.parse(JSON.stringify(recurrence));
+      } else {
+        delete item.recurrence;
+      }
+    });
+  };
+
+  /*
+   * Wochen werden ab der Woche des Startdatums gezählt.
+   * Dadurch bleibt "alle 2 Wochen" auch über Jahreswechsel korrekt.
+   */
+  function matches(event, day) {
+    const anchor = event.start.slice(0, 10);
+    const recurrence = event.recurrence;
+
+    if (
+      day < anchor ||
+      (recurrence?.until && day > recurrence.until)
+    ) return false;
+
+    if (!recurrence) return day === anchor;
+
+    const interval = recurrence.interval;
+
+    if (recurrence.frequency === "daily") {
+      return daysBetween(anchor, day) % interval === 0;
+    }
+
+    if (recurrence.frequency === "weekly") {
+      const weeks = Math.floor(
+        daysBetween(monday(anchor), monday(day)) / 7
+      );
+
+      return weeks % interval === 0 &&
+        recurrence.weekdays.includes(weekday(day));
+    }
+
+    if (recurrence.frequency === "monthly") {
+      const original = dateUTC(anchor);
+      const current = dateUTC(day);
+
+      const months =
+        (current.getUTCFullYear() - original.getUTCFullYear()) * 12 +
+        current.getUTCMonth() - original.getUTCMonth();
+
+      const lastDay = new Date(Date.UTC(
+        current.getUTCFullYear(),
+        current.getUTCMonth() + 1,
+        0
+      )).getUTCDate();
+
+      return months % interval === 0 &&
+        current.getUTCDate() === Math.min(original.getUTCDate(), lastDay);
+    }
+
+    return false;
+  }
+
+  function recurrenceLabel(event) {
+    const recurrence = event.recurrence;
+    if (!recurrence) return "";
+
+    const interval = recurrence.interval;
+    let label;
+
+    if (recurrence.frequency === "daily") {
+      label = interval === 1 ? "Täglich" : `Alle ${interval} Tage`;
+    } else if (recurrence.frequency === "weekly") {
+      const days = weekdays
+        .filter(([value]) => recurrence.weekdays.includes(value))
+        .map(([, text]) => text)
+        .join(", ");
+
+      label = (interval === 1 ? "Jede Woche" : `Alle ${interval} Wochen`) +
+        " · " + days;
+    } else {
+      label = interval === 1 ? "Monatlich" : `Alle ${interval} Monate`;
+    }
+
+    return "🔁 " + label +
+      (recurrence.until
+        ? " · bis " + displayDate(recurrence.until)
+        : " · unbegrenzt");
+  }
+
+  function eventsForDay(day) {
+    const result = [];
+
+    for (const event of data.events) {
+      if (event.archived || !event.start || !event.end) continue;
+
+      if (!event.recurrence) {
+        if (
+          event.start.slice(0, 10) <= day &&
+          event.end.slice(0, 10) >= day
+        ) {
+          result.push(event);
+        }
+        continue;
+      }
+
+      const anchor = event.start.slice(0, 10);
+      const span = daysBetween(anchor, event.end.slice(0, 10));
+
+      if (span < 0) continue;
+
+      /*
+       * Auch Termine über Mitternacht beziehungsweise mehrere Tage
+       * werden auf den betroffenen Kalendertagen angezeigt.
+       */
+      const earliest = addDays(day, -span);
+      const first = earliest < anchor ? anchor : earliest;
+
+      for (
+        let occurrenceDay = first;
+        occurrenceDay <= day;
+        occurrenceDay = addDays(occurrenceDay, 1)
+      ) {
+        if (!matches(event, occurrenceDay)) continue;
+
+        const start = occurrenceDay + "T" + event.start.slice(11);
+        const end = addDays(occurrenceDay, span) +
+          "T" + event.end.slice(11);
+
+        /* Ein Ende genau um Mitternacht belegt den Folgetag nicht. */
+        if (end <= day + "T00:00") continue;
+
+        result.push({ ...event, start, end });
+      }
+    }
+
+    return result.sort((a, b) =>
+      a.start.localeCompare(b.start) ||
+      a.name.localeCompare(b.name, "de")
+    );
+  }
+
+  /*
+   * Home und Kalender verwenden dieselbe Berechnung.
+   * Unbegrenzte Serien werden nicht als tausende Kopien gespeichert.
+   */
+  eventRows = function(day) {
+    const items = eventsForDay(day);
+
+    return items.map(event => {
+      const formatTime = value =>
+        (value.slice(0, 10) === day
+          ? ""
+          : displayDate(value.slice(0, 10)) + " ") +
+        value.slice(11, 16);
+
+      const repeating = Boolean(event.recurrence);
+
+      return `
+        <article class="item">
+          <div class="emoji">${esc(emoji(event, "event"))}</div>
+          <div class="body">
+            <div class="title">${esc(event.name)}</div>
+            <span class="badge">
+              🕒 ${esc(formatTime(event.start))}
+              – ${esc(formatTime(event.end))}
+            </span>
+
+            ${repeating ? `
+              <small style="display:block;margin-top:6px;color:#b3bdcd">
+                ${esc(recurrenceLabel(event))}
+              </small>
+              <small style="display:block;color:#b3bdcd">
+                Bearbeiten / Löschen: gesamte Serie
+              </small>
+            ` : ""}
+
+            <div class="actions">
+              ${actionButton(
+                "edit-event", "✏️", event.id,
+                repeating ? "Gesamte Serie bearbeiten" : "Termin bearbeiten"
+              )}
+              ${actionButton(
+                "archive-event", "🗑️", event.id,
+                repeating ? "Gesamte Serie löschen" : "Termin löschen"
+              )}
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("") || '<div class="empty">🌤️ Keine Termine geplant.</div>';
+  };
+
+  if (ready) render();
+})();
+</script>
 </body>
 </html>
