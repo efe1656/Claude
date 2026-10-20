@@ -1,0 +1,2882 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0d1017">
+<title>FokusPlan · YOU VS YOU</title>
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #0d1017;
+  --panel: #161c27;
+  --panel2: #1d2533;
+  --line: #2b3547;
+  --text: #f2f5fa;
+  --muted: #a4afc2;
+  --accent: #ff914d;
+  --green: #66dab0;
+  --red: #ff8d9c;
+  --blue: #93b7ff;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at top right, #30203355, transparent 45%),
+    var(--bg);
+  color: var(--text);
+}
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button, input, select, textarea { outline-offset: 4px; }
+button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent);
+}
+button {
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #221308;
+  font-weight: 750;
+}
+button.danger { color: var(--red); }
+button.icon { min-width: 43px; padding: 9px 11px; }
+button.active { border-color: var(--accent); color: var(--accent); }
+input, select, textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: #101620;
+  color: var(--text);
+  padding: 12px;
+  border-radius: 11px;
+  margin-top: 7px;
+}
+input[type=checkbox] { width: auto; margin: 0; accent-color: var(--accent); }
+textarea { min-height: 90px; resize: vertical; }
+label { display: block; margin: 13px 0; font-size: .9rem; }
+h1, h2, h3, p { margin-top: 0; }
+h1 { font-size: clamp(1.9rem, 5vw, 3rem); letter-spacing: -.05em; }
+h2 { font-size: 1.15rem; }
+h3 { font-size: 1rem; }
+small, .muted { color: var(--muted); }
+small { line-height: 1.6; }
+.wrap { max-width: 1100px; margin: auto; padding: 22px 20px 155px; }
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 22px;
+}
+.brand { font-weight: 800; letter-spacing: .12em; font-size: .8rem; }
+.flex { display: flex; align-items: center; gap: 10px; }
+.between { justify-content: space-between; }
+.actions { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.card {
+  background: linear-gradient(135deg, #19212d, #141a24);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 21px;
+  margin-bottom: 18px;
+}
+.metric {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 17px;
+}
+.metric strong { display: block; font-size: 1.8rem; margin: 7px 0; }
+.metric small { font-size: .76rem; }
+.hero {
+  border: 1px solid #68452f;
+  border-radius: 24px;
+  padding: 36px 22px;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 0%, #ff914d26, transparent 75%),
+    #171a23;
+  margin-bottom: 18px;
+}
+.hero h1 { margin: 0 0 10px; font-weight: 950; }
+.hero p { margin: 0; color: #d9bbab; }
+.hero .eyebrow {
+  font-size: .72rem;
+  letter-spacing: .18em;
+  color: var(--accent);
+  margin-bottom: 18px;
+}
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 17px 0;
+  border-bottom: 1px solid var(--line);
+}
+.item:last-child { border-bottom: 0; }
+.item .body { flex: 1; min-width: 0; }
+.item .title { font-weight: 700; overflow-wrap: anywhere; }
+.item .actions { margin-top: 12px; }
+.emoji {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  background: #ffffff08;
+  border: 1px solid #ffffff0b;
+  border-radius: 13px;
+  font-size: 1.5rem;
+}
+.badge {
+  display: inline-block;
+  border-radius: 7px;
+  padding: 3px 7px;
+  font-size: .73rem;
+  background: #ffffff09;
+  color: var(--muted);
+  margin: 7px 5px 0 0;
+}
+.good { color: var(--green); }
+.bad { color: var(--red); }
+.orange { color: var(--accent); }
+.empty { padding: 20px 0; color: var(--muted); line-height: 1.6; }
+.progress {
+  height: 8px;
+  background: #ffffff0c;
+  border-radius: 9px;
+  overflow: hidden;
+  margin: 12px 0 6px;
+}
+.progress > div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #ffd08e);
+  border-radius: inherit;
+}
+.view { display: none; }
+.view.active { display: block; }
+.hidden { display: none !important; }
+.account summary, details summary { cursor: pointer; }
+.account summary { font-weight: 700; }
+#syncStatus { font-size: .82rem; margin: 12px 0 0; color: var(--muted); }
+#identity { overflow-wrap: anywhere; }
+#shade {
+  position: fixed;
+  inset: 0;
+  background: #0009;
+  z-index: 40;
+  backdrop-filter: blur(4px);
+}
+#drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(310px, 86vw);
+  background: #131924;
+  border-right: 1px solid var(--line);
+  z-index: 41;
+  padding: 25px;
+}
+#drawer nav { display: grid; gap: 10px; margin-top: 35px; }
+#drawer nav button { text-align: left; padding: 16px; }
+.drawer-note { margin-top: 35px; line-height: 1.7; }
+dialog {
+  width: min(580px, calc(100vw - 24px));
+  max-height: 90dvh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: #171e2a;
+  color: var(--text);
+  padding: 24px;
+}
+dialog::backdrop { background: #000b; backdrop-filter: blur(5px); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.weekdays { display: flex; flex-wrap: wrap; gap: 8px; }
+.weekdays label {
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  margin: 4px 0;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 24px;
+}
+.timerbar {
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(720px, calc(100vw - 24px));
+  z-index: 30;
+  background: #222b3bf5;
+  border: 1px solid #b07646;
+  border-radius: 18px;
+  padding: 13px 17px;
+  box-shadow: 0 10px 45px #0009;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.timerbar strong { font-variant-numeric: tabular-nums; font-size: 1.5rem; }
+.timerbar .timer-name {
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+th, td {
+  padding: 13px 9px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+th { color: var(--muted); font-weight: 500; }
+th:first-child, td:first-child { white-space: normal; min-width: 160px; }
+.chart-row {
+  display: grid;
+  grid-template-columns: 75px 1fr 75px;
+  align-items: center;
+  gap: 12px;
+  margin: 13px 0;
+  font-size: .82rem;
+}
+.chart-row .progress { margin: 0; }
+#toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #29354a;
+  border: 1px solid #7f94b6;
+  padding: 13px 18px;
+  border-radius: 12px;
+  max-width: calc(100vw - 25px);
+  z-index: 100;
+}
+.error { color: var(--red); }
+@media(max-width: 720px) {
+  .grid { grid-template-columns: 1fr; gap: 0; }
+  .metrics { grid-template-columns: 1fr 1fr; }
+  .wrap { padding: 16px 13px 160px; }
+  .card { padding: 17px; }
+  .timerbar { flex-wrap: wrap; }
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+  .topbar .brand { font-size: .7rem; }
+}
+@media(prefers-reduced-motion: no-preference) {
+  button { transition: border-color .15s, background .15s; }
+}
+</style>
+</head>
+
+<body>
+<div id="shade" class="hidden" data-action="menu-close"></div>
+
+<aside id="drawer" class="hidden" aria-label="Hauptnavigation">
+  <div class="flex between">
+    <span class="brand">🔥 FOKUSPLAN</span>
+    <button data-action="menu-close" aria-label="Menü schließen">✕</button>
+  </div>
+  <nav>
+    <button data-action="nav" data-view="home">🏠 Home</button>
+    <button data-action="nav" data-view="calendar">📅 Kalender</button>
+    <button data-action="nav" data-view="goals">🎯 Ziele</button>
+    <button data-action="nav" data-view="statistics">📊 Statistik</button>
+  </nav>
+  <p class="muted drawer-note">
+    Dein Maßstab bist du selbst.<br>
+    Ein bewusster Schritt nach dem anderen.
+  </p>
+</aside>
+
+<main class="wrap">
+  <header class="topbar">
+    <div class="flex">
+      <button id="menuButton" data-action="menu"
+        aria-label="Menü öffnen" aria-expanded="false">☰</button>
+      <span class="brand">FOKUSPLAN</span>
+    </div>
+    <small id="todayLabel"></small>
+  </header>
+
+  <section class="card account">
+    <details id="accountDetails">
+      <summary>☁️ Online-Konto</summary>
+      <form id="loginForm">
+        <div class="form-row">
+          <label>E-Mail
+            <input id="email" type="email" autocomplete="username" required>
+          </label>
+          <label>Passwort
+            <input id="password" type="password"
+              autocomplete="current-password" minlength="8" required>
+          </label>
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit">Anmelden</button>
+          <button type="button" data-action="register">Konto erstellen</button>
+        </div>
+      </form>
+      <div id="accountActions" class="hidden">
+        <p id="identity" class="muted"></p>
+        <div class="actions">
+          <button data-action="refresh">🔄 Aktualisieren</button>
+          <button data-action="backup">💾 Datensicherung</button>
+          <button data-action="import">📥 Alte lokale Daten</button>
+          <button data-action="logout">Abmelden</button>
+        </div>
+      </div>
+      <p class="muted">
+        Auf allen Geräten dasselbe Konto verwenden.
+        Bearbeiten benötigt eine Internetverbindung.
+      </p>
+    </details>
+    <p id="syncStatus" role="status" aria-live="polite">Verbindung wird vorbereitet …</p>
+  </section>
+
+  <div id="app">
+    <section id="home" class="view active">
+      <div class="hero">
+        <div class="eyebrow">DEIN TAG. DEINE ENTSCHEIDUNG.</div>
+        <h1>🔥 YOU VS YOU 🔥</h1>
+        <p>⏳ Morgen kann es vorbei sein!</p>
+      </div>
+
+      <div id="whyCard"></div>
+      <div id="homeMetrics" class="metrics"></div>
+
+      <div class="actions" style="margin-bottom:18px">
+        <button class="primary" data-action="new-task">＋ Aufgabe</button>
+        <button data-action="new-event">＋ Termin</button>
+      </div>
+
+      <div class="grid">
+        <section class="card">
+          <h2>✅ Heute &amp; überfällig</h2>
+          <div id="homeTasks"></div>
+        </section>
+        <section class="card">
+          <h2>📅 Deine heutigen Termine</h2>
+          <div id="homeEvents"></div>
+        </section>
+      </div>
+
+      <details class="card">
+        <summary>🔁 Aufgabenserien &amp; Archiv</summary>
+        <p class="muted" style="margin-top:15px">
+          Wiederholungen erzeugen einzelne Tagesdurchführungen.
+          Beim Archivieren bleiben bisherige Ergebnisse erhalten.
+        </p>
+        <div id="seriesList"></div>
+      </details>
+    </section>
+
+    <section id="calendar" class="view">
+      <h1>📅 Dein Kalender</h1>
+      <section class="card">
+        <div class="actions">
+          <button data-action="day-prev" aria-label="Vorheriger Tag">←</button>
+          <input id="calendarDate" type="date"
+            aria-label="Kalendertag" style="width:auto;margin:0">
+          <button data-action="day-next" aria-label="Nächster Tag">→</button>
+          <button data-action="day-today">Heute</button>
+        </div>
+        <div class="actions" style="margin-top:16px">
+          <button class="primary" data-action="new-task">＋ Aufgabe</button>
+          <button data-action="new-event">＋ Termin</button>
+        </div>
+      </section>
+      <div class="grid">
+        <section class="card">
+          <h2>🗓️ Termine</h2>
+          <div id="calendarEvents"></div>
+        </section>
+        <section class="card">
+          <h2>📌 Aufgaben</h2>
+          <div id="calendarTasks"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="goals" class="view">
+      <div class="flex between">
+        <h1>🎯 Deine Ziele</h1>
+        <button class="primary" data-action="new-goal">＋ Ziel</button>
+      </div>
+      <p class="muted">Verbinde deine Aufgaben mit dem, was dir wichtig ist.</p>
+      <div id="goalList" class="grid"></div>
+    </section>
+
+    <section id="statistics" class="view">
+      <h1>📊 Dein Fortschritt</h1>
+      <section class="card">
+        <div class="actions" id="periodButtons">
+          <button data-action="period" data-value="week">Woche</button>
+          <button data-action="period" data-value="month">Monat</button>
+          <button data-action="period" data-value="year">Jahr</button>
+        </div>
+        <div class="actions" style="margin-top:15px">
+          <button data-action="period-prev" aria-label="Vorheriger Zeitraum">←</button>
+          <input id="statsDate" type="date" aria-label="Datum im Statistikzeitraum"
+            style="width:auto;margin:0">
+          <button data-action="period-next" aria-label="Nächster Zeitraum">→</button>
+          <button data-action="period-today">Aktuell</button>
+        </div>
+        <p id="periodLabel" class="muted" style="margin:15px 0 0"></p>
+      </section>
+      <div id="statMetrics" class="metrics"></div>
+      <section class="card">
+        <h2>📈 Geschaffte Aufgaben</h2>
+        <div id="statChart"></div>
+      </section>
+      <section class="card">
+        <h2>🧩 Auswertung nach Aufgabe</h2>
+        <div id="taskStats" class="table-scroll"></div>
+      </section>
+      <section class="card">
+        <h2>🎯 Zeit nach Ziel</h2>
+        <div id="goalStats"></div>
+      </section>
+      <p class="muted">
+        Aufgaben zählen nach ihrem geplanten Tag, mit ihrem aktuellen Status.
+        Die Erfüllungsquote berücksichtigt nur bis heute fällige Aufgaben.
+        Zeit zählt nach dem tatsächlichen Arbeitstag in Europe/Berlin.
+        Manuell eingetragene Zeit wird dem Aufgabentag zugeordnet.
+        Laufende Timerzeit zählt erst nach Stopp oder Beenden.
+        Vergangene Zahlen können sich durch spätere Erledigung oder Korrekturen ändern.
+      </p>
+    </section>
+  </div>
+</main>
+
+<div id="timerbar" class="timerbar hidden">
+  <div>
+    <small class="timer-name" id="timerName"></small>
+    <strong id="timerClock">00:00:00</strong>
+    <small id="timerState"></small>
+  </div>
+  <div class="actions">
+    <button id="timerToggle" data-action="timer-toggle">⏸ Stopp</button>
+    <button class="primary" data-action="timer-finish">✅ Beenden</button>
+  </div>
+</div>
+
+<dialog id="editor">
+  <form id="editForm">
+    <h2 id="editorTitle"></h2>
+    <input type="hidden" id="editType">
+    <input type="hidden" id="editId">
+
+    <label>Titel
+      <input id="editName" maxlength="160" required>
+    </label>
+    <label>Emoji · leer lassen für automatischen Vorschlag
+      <input id="editEmoji" maxlength="20" placeholder="✨">
+    </label>
+
+    <div id="taskFields" class="hidden">
+      <label>Tag / Beginn der Wiederholung
+        <input id="editDate" type="date" min="2000-01-01" max="2100-12-31">
+      </label>
+      <div id="repeatFields">
+        <label>Wiederholung
+          <select id="editRepeat">
+            <option value="">Einmalig</option>
+            <option value="daily">Jeden Tag</option>
+            <option value="weekly">Bestimmte Wochentage</option>
+            <option value="monthly">Monatlich</option>
+          </select>
+        </label>
+        <div id="weekdayFields" class="hidden">
+          <label>Alle wie viele Wochen?
+            <input id="editInterval" type="number" min="1" max="52" value="1">
+          </label>
+          <div class="weekdays">
+            <label><input type="checkbox" name="weekday" value="1"> Mo</label>
+            <label><input type="checkbox" name="weekday" value="2"> Di</label>
+            <label><input type="checkbox" name="weekday" value="3"> Mi</label>
+            <label><input type="checkbox" name="weekday" value="4"> Do</label>
+            <label><input type="checkbox" name="weekday" value="5"> Fr</label>
+            <label><input type="checkbox" name="weekday" value="6"> Sa</label>
+            <label><input type="checkbox" name="weekday" value="0"> So</label>
+          </div>
+        </div>
+      </div>
+      <label>Zugehöriges Ziel
+        <select id="editGoal"></select>
+      </label>
+      <label>Lebensbereich
+        <input id="editCategory" maxlength="80" placeholder="z. B. Schule, Sport">
+      </label>
+      <label>Tatsächliche Zeit in Minuten · optional
+        <input id="editMinutes" type="number" min="0" max="100000" step="0.1"
+          placeholder="Leer = vorhandene Zeit unverändert">
+      </label>
+      <small id="taskEditHint"></small>
+    </div>
+
+    <div id="eventFields" class="hidden">
+      <label>Beginn
+        <input id="editStart" type="datetime-local">
+      </label>
+      <label>Ende
+        <input id="editEnd" type="datetime-local">
+      </label>
+      <small>Ortszeit Europe/Berlin.</small>
+    </div>
+
+    <div id="goalFields" class="hidden">
+      <label>Zeitraum
+        <select id="editKind">
+          <option value="week">Woche</option>
+          <option value="month">Monat</option>
+          <option value="year">Jahr</option>
+          <option value="long">Langfristig</option>
+        </select>
+      </label>
+      <label>Fortschritt in Prozent
+        <input id="editProgress" type="number" min="0" max="100" value="0">
+      </label>
+      <label>Warum ist dir dieses Ziel wichtig?
+        <textarea id="editWhy" maxlength="1000"
+          placeholder="Dafür lohnt sich mein täglicher Einsatz …"></textarea>
+      </label>
+      <small>
+        Fortschritt wird bewusst manuell gesetzt.
+        Erledigte Aufgaben und Arbeitszeit werden zusätzlich ausgewertet.
+      </small>
+    </div>
+
+    <p id="formError" class="error" role="alert"></p>
+    <div class="dialog-actions">
+      <button type="button" data-action="editor-close">Abbrechen</button>
+      <button class="primary" id="saveButton" type="submit">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="hidden" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+
+/* ---------- Verbindung und bestehendes Datenformat ---------- */
+
+const SUPABASE_URL = "https://itxzpgkbugqswyynxbdj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_4aS7Gt6GrY8kgBzPn5Wsuw_xLq1ctxB";
+const TIMEZONE = "Europe/Berlin";
+const OLD_LOCAL_KEY = "fokusplan-v1";
+
+const $ = id => document.getElementById(id);
+const clone = value => JSON.parse(JSON.stringify(value));
+const uid = () => crypto.randomUUID();
+const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;",
+  '"': "&quot;", "'": "&#39;"
+}[char]));
+
+let client = null;
+let user = null;
+let ready = false;
+let busy = false;
+let authBusy = false;
+let revision = null;
+let currentView = "home";
+let period = "week";
+let toastTimeout;
+let data = emptyData();
+
+function emptyData() {
+  return {
+    tasks: [], events: [], goals: [], log: [],
+    focusV2: { schema: 2, records: {}, timer: null }
+  };
+}
+
+function notice(text) {
+  $("syncStatus").textContent = text;
+}
+
+function toast(text) {
+  $("toast").textContent = text;
+  $("toast").classList.remove("hidden");
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => $("toast").classList.add("hidden"), 5000);
+}
+
+/* ---------- Einheitliche Datumsberechnung ---------- */
+
+function berlinDay(value = Date.now()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(new Date(value));
+  const part = key => parts.find(p => p.type === key).value;
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
+function today() { return berlinDay(); }
+
+function dateUTC(day) {
+  return new Date(day + "T12:00:00Z");
+}
+
+function dateString(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(day, count) {
+  const date = dateUTC(day);
+  date.setUTCDate(date.getUTCDate() + count);
+  return dateString(date);
+}
+
+function weekday(day) { return dateUTC(day).getUTCDay(); }
+
+function monday(day) {
+  return addDays(day, -((weekday(day) + 6) % 7));
+}
+
+function daysBetween(a, b) {
+  return Math.round((dateUTC(b) - dateUTC(a)) / 86400000);
+}
+
+function monthLastDay(year, monthIndex) {
+  return new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+}
+
+function shiftMonth(day, amount) {
+  const d = dateUTC(day);
+  const original = d.getUTCDate();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() + amount);
+  d.setUTCDate(Math.min(original,
+    monthLastDay(d.getUTCFullYear(), d.getUTCMonth())));
+  return dateString(d);
+}
+
+function displayDate(day) {
+  return dateUTC(day).toLocaleDateString("de-DE", {
+    timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric"
+  });
+}
+
+/* Berlin-Ortszeit -> Zeitstempel; berücksichtigt Sommer-/Winterzeit. */
+function berlinTimestamp(day, clock = "00:00") {
+  const target = Date.parse(day + "T" + clock + ":00Z");
+  let guess = target;
+  const format = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIMEZONE,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hourCycle: "h23"
+  });
+  for (let i = 0; i < 4; i++) {
+    const parts = format.formatToParts(new Date(guess));
+    const p = key => parts.find(x => x.type === key).value;
+    const represented = Date.parse(
+      `${p("year")}-${p("month")}-${p("day")}T` +
+      `${p("hour")}:${p("minute")}:${p("second")}Z`
+    );
+    guess += target - represented;
+  }
+  return guess;
+}
+
+function duration(ms) {
+  const minutes = Math.floor(Math.max(0, ms) / 60000);
+  return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
+}
+
+function clock(ms) {
+  const seconds = Math.floor(Math.max(0, ms) / 1000);
+  return [
+    Math.floor(seconds / 3600),
+    Math.floor(seconds / 60) % 60,
+    seconds % 60
+  ].map(n => String(n).padStart(2, "0")).join(":");
+}
+
+function validDay(day) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day || "")) return false;
+  const d = dateUTC(day);
+  return Number.isFinite(d.getTime()) && dateString(d) === day;
+}
+
+/* ---------- Automatische Emojis ohne kostenpflichtigen Dienst ---------- */
+
+function autoEmoji(name, type = "task") {
+  const text = String(name || "").toLocaleLowerCase("de-DE");
+  const rules = [
+    [/fußball|fussball|soccer/, "⚽"],
+    [/gym|fitness|kraft|hantel/, "💪"],
+    [/laufen|joggen|lauftraining/, "🏃"],
+    [/radfahren|fahrrad|cycling/, "🚴"],
+    [/schwimm/, "🏊"],
+    [/yoga|meditation/, "🧘"],
+    [/abitur|abschluss|prüfung|klausur/, "🎓"],
+    [/mathe|rechnen/, "🧮"],
+    [/lernen|schule|hausaufgabe|studium/, "📚"],
+    [/lesen|buch/, "📖"],
+    [/englisch|französisch|sprache|vokabel/, "🗣️"],
+    [/programm|coding|code|informatik/, "💻"],
+    [/arbeit|projekt|bewerbung/, "💼"],
+    [/meeting|besprechung|gespräch/, "🤝"],
+    [/arzt|zahnarzt|gesundheit/, "🩺"],
+    [/einkauf|supermarkt/, "🛒"],
+    [/kochen|essen|ernährung/, "🥗"],
+    [/trinken|wasser/, "💧"],
+    [/schlaf|bett/, "😴"],
+    [/putzen|aufräumen|haushalt/, "🧹"],
+    [/familie|eltern/, "🏡"],
+    [/freund|treffen/, "👋"],
+    [/musik|klavier|gitarre/, "🎵"],
+    [/geld|sparen|finanz/, "💰"],
+    [/urlaub|reise/, "🌍"],
+    [/spazier|natur/, "🌿"]
+  ];
+  return rules.find(([pattern]) => pattern.test(text))?.[1]
+    || ({ task: "📌", event: "📅", goal: "🎯" })[type];
+}
+
+function emoji(item, type) {
+  return item.emoji || autoEmoji(item.name, type);
+}
+
+/* ---------- Kompatible Erweiterung der vorhandenen Daten ---------- */
+
+function normalize(raw) {
+  if (!raw || !["tasks", "events", "goals", "log"].every(
+    key => Array.isArray(raw[key])
+  )) throw Error("Unbekanntes Datenformat. Es wurde nichts überschrieben.");
+
+  const next = clone(raw);
+
+  for (const kind of ["tasks", "events", "goals"]) {
+    const ids = new Set();
+    for (const item of next[kind]) {
+      if (!item || typeof item.id !== "string" ||
+          typeof item.name !== "string" || ids.has(item.id)) {
+        throw Error("Ein gespeicherter Eintrag ist ungültig.");
+      }
+      ids.add(item.id);
+    }
+  }
+
+  if (next.focusV2 && next.focusV2.schema !== 2) {
+    throw Error("Diese Daten benötigen eine andere App-Version.");
+  }
+
+  next.focusV2 ||= { schema: 2, records: {}, timer: null };
+  const state = next.focusV2;
+  if (!state.records || Array.isArray(state.records) ||
+      typeof state.records !== "object") {
+    throw Error("Ungültiger Aufgabenverlauf.");
+  }
+
+  for (const task of next.tasks) {
+    task.anchor ||= validDay(task.due) ? task.due : today();
+    task.interval ||= 1;
+    if (task.repeat === "weekly" && !Array.isArray(task.weekdays)) {
+      task.weekdays = [weekday(task.anchor)];
+    }
+
+    /* Alte erledigte Aufgaben einmalig übernehmen. */
+    if (task.done && !task.v2Imported) {
+      const key = task.id + "@" + task.anchor;
+      if (!Object.hasOwn(state.records, key)) {
+        state.records[key] = {
+          key, taskId: task.id, date: task.anchor,
+          name: task.name, emoji: task.emoji || "",
+          goalId: task.goalId || "", category: task.category || "",
+          status: "done", completedAt: task.completedAt || null,
+          sessions: []
+        };
+      }
+    }
+    task.v2Imported = true;
+  }
+
+  for (const record of Object.values(state.records)) {
+    if (!record || !validDay(record.date) ||
+        !["open", "done", "missed", "cancelled"].includes(record.status) ||
+        !Array.isArray(record.sessions)) {
+      throw Error("Ein Aufgabenverlauf ist ungültig.");
+    }
+    for (const session of record.sessions) {
+      if (session.manual) {
+        if (!Number.isFinite(session.ms) || session.ms < 0 ||
+            !validDay(session.day)) throw Error("Ungültige manuelle Zeit.");
+      } else if (!Number.isFinite(session.start) ||
+                 !Number.isFinite(session.end) ||
+                 session.end < session.start) {
+        throw Error("Ungültiger Timerabschnitt.");
+      }
+    }
+  }
+
+  if (state.timer) {
+    const timer = state.timer;
+    if (!Object.hasOwn(state.records, timer.key) ||
+        (timer.startedAt !== null && !Number.isFinite(timer.startedAt))) {
+      throw Error("Ungültiger Timerstand.");
+    }
+  }
+
+  return next;
+}
+
+/* ---------- Online-Speicherung mit Versionskontrolle ---------- */
+
+function controls() {
+  $("app").inert = !ready || busy;
+  $("editForm").inert = !ready || busy;
+  $("loginForm").classList.toggle("hidden", !!user);
+  $("accountActions").classList.toggle("hidden", !user);
+  $("identity").textContent = user?.email || "";
+
+  document.querySelectorAll("#timerbar button").forEach(
+    button => button.disabled = !ready || busy
+  );
+  document.querySelectorAll("#accountActions button").forEach(
+    button => button.disabled = busy
+  );
+}
+
+async function refresh(quiet = false) {
+  if (!user || busy || !client) return;
+  const currentUserId = user.id;
+  busy = true;
+  controls();
+  if (!quiet) notice("☁️ Online-Daten werden geladen …");
+
+  try {
+    const result = await client.from("fokusplan")
+      .select("data,version").eq("user_id", currentUserId).maybeSingle();
+
+    if (result.error) throw result.error;
+    if (user?.id !== currentUserId) return;
+
+    data = result.data ? normalize(result.data.data) : emptyData();
+    revision = result.data?.version ?? null;
+    ready = true;
+    render();
+    notice("🟢 Online verbunden · Daten sind aktuell");
+  } catch (error) {
+    ready = false;
+    notice("⚠️ Laden fehlgeschlagen: " + error.message +
+      " · Bitte Aktualisieren.");
+  } finally {
+    busy = false;
+    controls();
+  }
+}
+
+/* Änderungen werden auf einer Kopie vorbereitet.
+   Bei Fehlern wird kein Erfolg vorgetäuscht. */
+async function commit(change) {
+  if (!ready || busy || !user) {
+    toast("Bitte zuerst anmelden bzw. die Online-Daten aktualisieren.");
+    return false;
+  }
+
+  const currentUserId = user.id;
+  const draft = clone(data);
+  busy = true;
+  controls();
+  notice("☁️ Wird online gespeichert …");
+
+  try {
+    change(draft);
+    const checked = normalize(draft);
+    const nextRevision = revision === null ? 0 : revision + 1;
+    let result;
+
+    if (revision === null) {
+      result = await client.from("fokusplan").insert({
+        user_id: currentUserId, data: checked, version: nextRevision
+      }).select("version").maybeSingle();
+    } else {
+      result = await client.from("fokusplan").update({
+        data: checked, version: nextRevision
+      }).eq("user_id", currentUserId).eq("version", revision)
+        .select("version").maybeSingle();
+    }
+
+    if (result.error) throw result.error;
+    if (!result.data) {
+      throw Error("Auf einem anderen Gerät wurden Daten geändert.");
+    }
+    if (user?.id !== currentUserId) return false;
+
+    data = checked;
+    revision = result.data.version;
+    render();
+    notice("🟢 Online gespeichert · " +
+      new Date().toLocaleTimeString("de-DE", { timeZone: TIMEZONE }));
+    return true;
+  } catch (error) {
+    ready = false;
+    notice("⚠️ Speichern nicht bestätigt: " + error.message +
+      " · Aktualisieren und den Stand prüfen.");
+    $("formError").textContent =
+      "Nicht bestätigt. Dialog schließen, aktualisieren und den Stand prüfen.";
+    toast("Speichern nicht bestätigt. Bitte Online-Status prüfen.");
+    return false;
+  } finally {
+    busy = false;
+    controls();
+  }
+}
+
+/* ---------- Aufgabenserien und einzelne Durchführungen ---------- */
+
+function scheduleMatches(task, day) {
+  if (day < task.anchor) return false;
+
+  if (!task.repeat) return day === task.anchor;
+  if (task.repeat === "daily") return true;
+
+  if (task.repeat === "weekly") {
+    const weeks = Math.floor(daysBetween(monday(task.anchor), monday(day)) / 7);
+    return weeks % Math.max(1, Number(task.interval) || 1) === 0 &&
+      (task.weekdays || [weekday(task.anchor)]).includes(weekday(day));
+  }
+
+  if (task.repeat === "monthly") {
+    const current = dateUTC(day);
+    const wanted = Math.min(
+      dateUTC(task.anchor).getUTCDate(),
+      monthLastDay(current.getUTCFullYear(), current.getUTCMonth())
+    );
+    return current.getUTCDate() === wanted;
+  }
+
+  return day === task.anchor;
+}
+
+function occurrence(task, date) {
+  return {
+    key: task.id + "@" + date,
+    taskId: task.id, date,
+    name: task.name, emoji: task.emoji || "",
+    category: task.category || "", goalId: task.goalId || "",
+    status: "open", sessions: [], completedAt: null
+  };
+}
+
+/* Vergangene Durchführungen bleiben erhalten.
+   Zukünftige Durchführungen werden bei Bedarf berechnet. */
+function occurrences(until = today(), source = data) {
+  const map = new Map();
+  for (const task of source.tasks) {
+    const end = task.archiveDate && task.archiveDate < until
+      ? task.archiveDate : until;
+
+    if (!task.repeat) {
+      if (task.anchor <= end) {
+        const item = occurrence(task, task.anchor);
+        map.set(item.key, item);
+      }
+      continue;
+    }
+
+    for (let day = task.anchor; day <= end; day = addDays(day, 1)) {
+      if (scheduleMatches(task, day)) {
+        const item = occurrence(task, day);
+        map.set(item.key, item);
+      }
+    }
+  }
+
+  for (const [key, record] of Object.entries(source.focusV2.records)) {
+    map.set(key, clone(record));
+  }
+
+  return [...map.values()]
+    .filter(item => item.date <= until && item.status !== "cancelled")
+    .sort((a, b) => a.date.localeCompare(b.date) ||
+      a.name.localeCompare(b.name, "de"));
+}
+
+function findOccurrence(key) {
+  const stored = data.focusV2.records[key];
+  if (stored) return clone(stored);
+
+  const separator = key.lastIndexOf("@");
+  const taskId = key.slice(0, separator);
+  const date = key.slice(separator + 1);
+  const task = data.tasks.find(t => t.id === taskId);
+
+  if (!task || !validDay(date)) throw Error("Aufgabe nicht gefunden.");
+  return occurrence(task, date);
+}
+
+function ensureRecord(draft, key) {
+  if (!Object.hasOwn(draft.focusV2.records, key)) {
+    draft.focusV2.records[key] = findOccurrence(key);
+  }
+  return draft.focusV2.records[key];
+}
+
+function recordedTime(record) {
+  return record.sessions.reduce((sum, session) =>
+    sum + (session.manual ? session.ms : session.end - session.start), 0);
+}
+
+function repeatText(task) {
+  if (task.repeat === "daily") return "🔁 Täglich";
+  if (task.repeat === "monthly") return "🔁 Monatlich";
+  if (task.repeat === "weekly") {
+    const names = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+    return "🔁 " + (task.interval > 1 ? `Alle ${task.interval} Wochen · ` : "") +
+      (task.weekdays || []).map(n => names[n]).join(", ");
+  }
+  return "📌 Einmalig";
+}
+
+/* ---------- Timer ---------- */
+
+function stopActiveTimer(draft, now = Date.now()) {
+  const timer = draft.focusV2.timer;
+  if (!timer || timer.startedAt === null) return;
+  const record = ensureRecord(draft, timer.key);
+  record.sessions.push({
+    start: timer.startedAt,
+    end: Math.max(timer.startedAt, now)
+  });
+  timer.startedAt = null;
+}
+
+async function startTimer(key) {
+  const item = findOccurrence(key);
+  if (item.status !== "open") return toast("Aufgabe zuerst wieder öffnen.");
+  if (item.date > today()) return toast("Der Aufgabentag liegt noch in der Zukunft.");
+
+  const previous = data.focusV2.timer;
+  if (previous?.key === key && previous.startedAt !== null) return;
+
+  if (previous && previous.key !== key &&
+      !confirm("Den bisherigen Timer pausieren und diese Aufgabe starten?")) {
+    return;
+  }
+
+  await commit(draft => {
+    stopActiveTimer(draft);
+    ensureRecord(draft, key);
+    draft.focusV2.timer = { key, startedAt: Date.now() };
+  });
+}
+
+async function toggleTimer() {
+  const timer = data.focusV2.timer;
+  if (!timer) return;
+  if (timer.startedAt === null) return startTimer(timer.key);
+  await commit(draft => stopActiveTimer(draft));
+}
+
+async function setStatus(key, status) {
+  const item = findOccurrence(key);
+  if (item.date > today() && status !== "open") {
+    return toast("Bitte zukünftige Aufgaben erst am jeweiligen Tag bewerten.");
+  }
+
+  await commit(draft => {
+    if (draft.focusV2.timer?.key === key) {
+      stopActiveTimer(draft);
+      draft.focusV2.timer = null;
+    }
+    const record = ensureRecord(draft, key);
+    record.status = status;
+    record.completedAt = status === "done" ? new Date().toISOString() : null;
+  });
+}
+
+function tick() {
+  const timer = data.focusV2.timer;
+  $("timerbar").classList.toggle("hidden", !timer || !user);
+  if (!timer || !user) return;
+
+  const record = data.focusV2.records[timer.key];
+  if (!record) return;
+
+  const elapsed = timer.startedAt === null
+    ? 0 : Math.max(0, Date.now() - timer.startedAt);
+
+  $("timerName").textContent = emoji(record, "task") + " " + record.name;
+  $("timerClock").textContent = clock(recordedTime(record) + elapsed);
+  $("timerState").textContent = timer.startedAt === null ? " · pausiert" : " · läuft";
+  $("timerToggle").textContent = timer.startedAt === null ? "▶️ Start" : "⏸ Stopp";
+}
+
+/* ---------- Oberfläche ---------- */
+
+function actionButton(action, label, id = "", title = "", extra = "") {
+  return `<button data-action="${esc(action)}" data-id="${esc(id)}"
+    title="${esc(title || label)}" aria-label="${esc(title || label)}"
+    ${extra}>${esc(label)}</button>`;
+}
+
+function metric(value, label) {
+  return `<div class="metric"><small>${esc(label)}</small>
+    <strong>${esc(value)}</strong></div>`;
+}
+
+function goalName(id) {
+  return data.goals.find(goal => goal.id === id)?.name || "";
+}
+
+function taskRow(item) {
+  const state = ({
+    open: item.date < today() ? "⏳ Überfällig" : "📌 Offen",
+    done: "✅ Geschafft", missed: "❌ Nicht geschafft"
+  })[item.status];
+
+  const isOpen = item.status === "open";
+  const canFinish = item.date <= today();
+  const time = recordedTime(item);
+  const task = data.tasks.find(t => t.id === item.taskId);
+  const active = data.focusV2.timer?.key === item.key;
+
+  return `<article class="item">
+    <div class="emoji">${esc(emoji(item, "task"))}</div>
+    <div class="body">
+      <div class="title">${esc(item.name)}</div>
+      <small>${esc(displayDate(item.date))}
+        ${item.category ? " · " + esc(item.category) : ""}</small>
+      <div>
+        <span class="badge ${item.status === "done" ? "good" :
+          item.status === "missed" ? "bad" : ""}">${esc(state)}</span>
+        ${task?.repeat ? `<span class="badge">🔁 Wiederholung</span>` : ""}
+        ${item.goalId ? `<span class="badge">🎯 ${esc(goalName(item.goalId))}</span>` : ""}
+        <span class="badge">⏱️ ${time > 0 ? duration(time) :
+          item.sessions.length ? "0 h 0 min" : "Zeit nicht erfasst"}</span>
+      </div>
+      <div class="actions">
+        ${isOpen && canFinish ? (
+          actionButton(active ? "timer-toggle" : "start",
+            active && data.focusV2.timer.startedAt !== null ? "⏸" : "▶️",
+            item.key, "Timer starten oder pausieren") +
+          actionButton("done", "✅", item.key, "Geschafft – auch ohne Timer") +
+          actionButton("missed", "❌", item.key, "Nicht geschafft")
+        ) : ""}
+        ${!isOpen ? actionButton("reopen", "↩️", item.key, "Wieder öffnen") : ""}
+        ${isOpen && item.date < today() ?
+          actionButton("move-today", "📅 Heute", item.key, "Auf heute verschieben") : ""}
+        ${actionButton("edit-task", "✏️", item.key, "Diese Durchführung bearbeiten")}
+        ${actionButton("cancel-task", "🗑️", item.key,
+          "Diese Durchführung aus dem Plan entfernen")}
+      </div>
+    </div>
+  </article>`;
+}
+
+function eventRows(day) {
+  const items = data.events.filter(event => !event.archived &&
+    event.start?.slice(0, 10) <= day && event.end?.slice(0, 10) >= day)
+    .sort((a, b) => a.start.localeCompare(b.start));
+
+  return items.map(event => {
+    const start = event.start.slice(0, 10) === day
+      ? event.start.slice(11, 16) : displayDate(event.start.slice(0, 10)) +
+        " " + event.start.slice(11, 16);
+    const end = event.end.slice(0, 10) === day
+      ? event.end.slice(11, 16) : displayDate(event.end.slice(0, 10)) +
+        " " + event.end.slice(11, 16);
+
+    return `<article class="item">
+      <div class="emoji">${esc(emoji(event, "event"))}</div>
+      <div class="body">
+        <div class="title">${esc(event.name)}</div>
+        <span class="badge">🕒 ${esc(start)} – ${esc(end)}</span>
+        <div class="actions">
+          ${actionButton("edit-event", "✏️", event.id, "Termin bearbeiten")}
+          ${actionButton("archive-event", "🗑️", event.id, "Termin archivieren")}
+        </div>
+      </div>
+    </article>`;
+  }).join("") || `<div class="empty">🌤️ Keine Termine geplant.</div>`;
+}
+
+function renderGoals() {
+  const all = occurrences(today());
+  $("goalList").innerHTML = data.goals.filter(goal => !goal.archived).map(goal => {
+    const related = all.filter(item => item.goalId === goal.id);
+    const done = related.filter(item => item.status === "done").length;
+    const totalTime = Object.values(data.focusV2.records)
+      .filter(record => record.goalId === goal.id)
+      .reduce((sum, record) => sum + recordedTime(record), 0);
+    const progress = Math.max(0, Math.min(100, Number(goal.progress) || 0));
+
+    return `<article class="card">
+      <div class="flex">
+        <div class="emoji">${esc(emoji(goal, "goal"))}</div>
+        <div><h2 style="margin:0">${esc(goal.name)}</h2>
+          <small>${esc(({
+            week: "Wochenziel", month: "Monatsziel", year: "Jahresziel",
+            long: "Langfristiges Ziel"
+          })[goal.kind] || "Ziel")}</small>
+        </div>
+      </div>
+      ${goal.why ? `<p style="margin-top:18px">💡 ${esc(goal.why)}</p>` : ""}
+      <div class="progress"><div style="width:${progress}%"></div></div>
+      <small>${progress} % · manuell gesetzter Fortschritt</small>
+      <p class="muted" style="margin-top:12px">
+        ✅ ${done} geschafft · ⏱️ ${duration(totalTime)}
+      </p>
+      <div class="actions">
+        ${actionButton("edit-goal", "✏️ Bearbeiten", goal.id)}
+        ${actionButton("archive-goal", "🗑️", goal.id, "Ziel archivieren")}
+      </div>
+    </article>`;
+  }).join("") || `<div class="card empty">🎯 Dein nächstes Ziel wartet auf dich.</div>`;
+}
+
+function renderArchive() {
+  const taskRows = data.tasks.map(task => `<article class="item">
+    <div class="body">
+      <b>${esc(emoji(task, "task"))} ${esc(task.name)}</b><br>
+      <small>${esc(repeatText(task))}
+        ${task.archiveDate ? " · archiviert" : ""}</small>
+    </div>
+    ${actionButton(task.archiveDate ? "restore-task" : "archive-task",
+      task.archiveDate ? "↩️" : "🗃️", task.id,
+      task.archiveDate ? "Ab heute wieder aktivieren" : "Aufgabe / Serie archivieren")}
+  </article>`).join("");
+
+  const otherRows = ["events", "goals"].flatMap(kind =>
+    data[kind].filter(item => item.archived).map(item =>
+      `<article class="item"><div class="body">
+        <b>${esc(item.name)}</b><br><small>Archiviert</small></div>
+        ${actionButton(kind === "events" ? "restore-event" : "restore-goal",
+          "↩️", item.id, "Wiederherstellen")}
+      </article>`
+    )
+  ).join("");
+
+  $("seriesList").innerHTML = taskRows + otherRows ||
+    `<div class="empty">Noch keine Aufgaben oder archivierten Einträge.</div>`;
+}
+
+function render() {
+  $("todayLabel").textContent = new Date().toLocaleDateString("de-DE", {
+    timeZone: TIMEZONE, weekday: "short", day: "numeric", month: "short"
+  });
+
+  const all = occurrences(today());
+  const todays = all.filter(item => item.date === today());
+  const open = all.filter(item => item.status === "open");
+  const late = open.filter(item => item.date < today());
+  const done = todays.filter(item => item.status === "done");
+
+  const start = berlinTimestamp(today());
+  const end = berlinTimestamp(addDays(today(), 1));
+  const timeToday = allRecordedTime(start, end);
+
+  $("homeMetrics").innerHTML =
+    metric(done.length, "✅ Heute geschafft") +
+    metric(open.length, "📌 Offen bis heute") +
+    metric(late.length, "⏳ Überfällig") +
+    metric(duration(timeToday), "⏱️ Heute erfasst");
+
+  const shown = all.filter(item => item.status === "open" || item.date === today());
+  $("homeTasks").innerHTML = shown.map(taskRow).join("") ||
+    `<div class="empty">✨ Alles frei. Plane deinen nächsten sinnvollen Schritt.</div>`;
+
+  $("homeEvents").innerHTML = eventRows(today());
+  const chosen = $("calendarDate").value || today();
+  $("calendarEvents").innerHTML = eventRows(chosen);
+  $("calendarTasks").innerHTML = occurrences(chosen)
+    .filter(item => item.date === chosen).map(taskRow).join("") ||
+    `<div class="empty">📌 Für diesen Tag sind keine Aufgaben geplant.</div>`;
+
+  const why = data.goals.find(goal => !goal.archived && goal.why);
+  $("whyCard").innerHTML = why ? `<section class="card">
+    <small class="orange">DEIN WARUM</small>
+    <h2 style="margin-top:10px">${esc(emoji(why, "goal"))} ${esc(why.name)}</h2>
+    <p style="margin-bottom:0">${esc(why.why)}</p></section>` : "";
+
+  renderGoals();
+  renderArchive();
+  renderStats();
+  tick();
+  controls();
+}
+
+/* ---------- Präzise Zeit- und Aufgabenstatistik ---------- */
+
+function sessionTimeInRange(session, start, end) {
+  if (session.manual) {
+    const day = berlinTimestamp(session.day);
+    return day >= start && day < end ? session.ms : 0;
+  }
+  return Math.max(0,
+    Math.min(session.end, end) - Math.max(session.start, start));
+}
+
+function recordTimeInRange(record, start, end) {
+  return record.sessions.reduce(
+    (sum, session) => sum + sessionTimeInRange(session, start, end), 0
+  );
+}
+
+function allRecordedTime(start, end) {
+  return Object.values(data.focusV2.records).reduce(
+    (sum, record) => sum + recordTimeInRange(record, start, end), 0
+  );
+}
+
+function periodBounds() {
+  const anchor = $("statsDate").value || today();
+  let start, end;
+
+  if (period === "week") {
+    start = monday(anchor);
+    end = addDays(start, 7);
+  } else if (period === "month") {
+    start = anchor.slice(0, 7) + "-01";
+    end = shiftMonth(start, 1);
+  } else {
+    start = anchor.slice(0, 4) + "-01-01";
+    end = (Number(anchor.slice(0, 4)) + 1) + "-01-01";
+  }
+  return { start, end };
+}
+
+function renderStats() {
+  const range = periodBounds();
+  const startMs = berlinTimestamp(range.start);
+  const endMs = berlinTimestamp(range.end);
+
+  const items = occurrences(addDays(range.end, -1))
+    .filter(item => item.date >= range.start && item.date < range.end);
+
+  const due = items.filter(item => item.date <= today());
+  const done = due.filter(item => item.status === "done").length;
+  const missed = due.filter(item => item.status === "missed").length;
+  const open = due.filter(item => item.status === "open").length;
+  const late = due.filter(item =>
+    item.status === "open" && item.date < today()).length;
+  const future = items.filter(item => item.date > today()).length;
+  const rate = due.length ? Math.round(done / due.length * 100) : null;
+  const time = allRecordedTime(startMs, endMs);
+  const untracked = due.filter(item =>
+    item.status === "done" && item.sessions.length === 0).length;
+
+  $("periodLabel").textContent =
+    displayDate(range.start) + " – " + displayDate(addDays(range.end, -1));
+
+  document.querySelectorAll("#periodButtons button").forEach(button =>
+    button.classList.toggle("active", button.dataset.value === period)
+  );
+
+  $("statMetrics").innerHTML =
+    metric(done, "✅ Geschafft") +
+    metric(missed, "❌ Nicht geschafft") +
+    metric(open, "📌 Fällig & offen") +
+    metric(late, "⏳ Davon überfällig") +
+    metric(rate === null ? "–" : rate + " %", "📈 Erfüllungsquote") +
+    metric(duration(time), "⏱️ Erfasste Arbeitszeit") +
+    metric(untracked, "✅ Ohne Zeitangabe") +
+    metric(future, "🗓️ Noch geplant");
+
+  const groups = new Map();
+  function group(taskId, name, icon) {
+    if (!groups.has(taskId)) {
+      groups.set(taskId, {
+        name, icon, done: 0, missed: 0, open: 0, time: 0
+      });
+    }
+    return groups.get(taskId);
+  }
+
+  for (const item of due) {
+    const row = group(item.taskId, item.name, emoji(item, "task"));
+    row[item.status]++;
+  }
+
+  const goalTimes = new Map();
+  for (const record of Object.values(data.focusV2.records)) {
+    const amount = recordTimeInRange(record, startMs, endMs);
+    if (!amount) continue;
+    group(record.taskId, record.name, emoji(record, "task")).time += amount;
+    const goal = record.goalId || "";
+    goalTimes.set(goal, (goalTimes.get(goal) || 0) + amount);
+  }
+
+  $("taskStats").innerHTML = groups.size ? `
+    <table><thead><tr>
+      <th>Aufgabe</th><th>✅</th><th>❌</th><th>📌 Offen</th><th>⏱️ Zeit</th>
+    </tr></thead><tbody>
+      ${[...groups.values()].map(row => `<tr>
+        <td>${esc(row.icon)} ${esc(row.name)}</td>
+        <td>${row.done}</td><td>${row.missed}</td><td>${row.open}</td>
+        <td>${duration(row.time)}</td>
+      </tr>`).join("")}
+    </tbody></table>` :
+    `<div class="empty">Noch keine Daten in diesem Zeitraum.</div>`;
+
+  $("goalStats").innerHTML = [...goalTimes.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([goalId, amount]) => `<div class="item">
+      <div class="body">${esc(goalName(goalId) || "Ohne Zielzuordnung")}</div>
+      <b>${duration(amount)}</b></div>`).join("") ||
+    `<div class="empty">Noch keine Arbeitszeit erfasst.</div>`;
+
+  const buckets = [];
+  if (period === "year") {
+    for (let month = 1; month <= 12; month++) {
+      const key = range.start.slice(0, 4) + "-" + String(month).padStart(2, "0");
+      buckets.push({
+        label: dateUTC(key + "-01").toLocaleDateString("de-DE", {
+          month: "short", timeZone: "UTC"
+        }),
+        count: due.filter(item =>
+          item.status === "done" && item.date.startsWith(key)).length
+      });
+    }
+  } else {
+    for (let day = range.start; day < range.end; day = addDays(day, 1)) {
+      buckets.push({
+        label: displayDate(day).slice(0, 5),
+        count: due.filter(item =>
+          item.status === "done" && item.date === day).length
+      });
+    }
+  }
+
+  const maximum = Math.max(1, ...buckets.map(bucket => bucket.count));
+  $("statChart").innerHTML = buckets.map(bucket => `<div class="chart-row">
+    <span class="muted">${esc(bucket.label)}</span>
+    <div class="progress"><div style="width:${bucket.count / maximum * 100}%"></div></div>
+    <span>${bucket.count} ✅</span>
+  </div>`).join("");
+}
+
+/* ---------- Formulare ---------- */
+
+function showRepeatOptions() {
+  $("weekdayFields").classList.toggle("hidden", $("editRepeat").value !== "weekly");
+}
+
+function openEditor(type, id = "") {
+  if (!ready || busy) return;
+  let item = {};
+
+  if (id) {
+    item = type === "task" ? findOccurrence(id) :
+      data[type === "event" ? "events" : "goals"].find(x => x.id === id);
+    if (!item) return toast("Eintrag nicht gefunden.");
+  }
+
+  $("editForm").reset();
+  $("editType").value = type;
+  $("editId").value = id;
+  $("editName").value = item.name || "";
+  $("editEmoji").value = item.emoji || "";
+  $("formError").textContent = "";
+  $("editorTitle").textContent =
+    (id ? "✏️ Bearbeiten: " : "✨ Neu: ") +
+    ({ task: "Aufgabe", event: "Termin", goal: "Ziel" })[type];
+
+  for (const name of ["task", "event", "goal"]) {
+    $(name + "Fields").classList.toggle("hidden", name !== type);
+    $(name + "Fields").querySelectorAll("input,select,textarea")
+      .forEach(field => field.disabled = name !== type);
+  }
+
+  const selectedDay = currentView === "calendar"
+    ? $("calendarDate").value || today() : today();
+
+  $("editDate").value = item.date || selectedDay;
+  $("editDate").required = type === "task";
+  $("repeatFields").classList.toggle("hidden", !!id);
+  $("editRepeat").value = "";
+  $("editInterval").value = 1;
+  document.querySelectorAll('[name="weekday"]').forEach(input =>
+    input.checked = Number(input.value) === weekday(selectedDay)
+  );
+  showRepeatOptions();
+
+  $("editGoal").innerHTML = `<option value="">Ohne Ziel</option>` +
+    data.goals.filter(goal => !goal.archived || goal.id === item.goalId)
+      .map(goal => `<option value="${esc(goal.id)}">${esc(emoji(goal, "goal"))}
+        ${esc(goal.name)}${goal.archived ? " (archiviert)" : ""}</option>`).join("");
+  $("editGoal").value = item.goalId || "";
+  $("editCategory").value = item.category || "";
+  $("editMinutes").value = "";
+  $("taskEditHint").textContent = id
+    ? "Änderungen gelten nur für diese Durchführung. Eine Zeitangabe ersetzt " +
+      "ihre bisher erfasste Zeit und wird dem gewählten Aufgabentag zugeordnet."
+    : "Wiederholungen werden einzeln ausgewertet. Die Zeitangabe ist optional.";
+
+  $("editStart").value = item.start?.slice(0, 16) || selectedDay + "T09:00";
+  $("editEnd").value = item.end?.slice(0, 16) || selectedDay + "T10:00";
+  $("editStart").required = type === "event";
+  $("editEnd").required = type === "event";
+  $("editKind").value = item.kind || "year";
+  $("editProgress").value = item.progress || 0;
+  $("editWhy").value = item.why || "";
+
+  $("editor").showModal();
+}
+
+$("editRepeat").addEventListener("change", showRepeatOptions);
+
+$("editForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!ready || busy) return;
+
+  const type = $("editType").value;
+  const id = $("editId").value;
+  const name = $("editName").value.trim();
+  const icon = $("editEmoji").value.trim() || autoEmoji(name, type);
+  $("formError").textContent = "";
+
+  try {
+    if (!name) throw Error("Bitte einen Titel eingeben.");
+
+    let change;
+
+    if (type === "task") {
+      const date = $("editDate").value;
+      const repeat = id ? "" : $("editRepeat").value;
+      const interval = Number($("editInterval").value) || 1;
+      const weekdays = [...document.querySelectorAll('[name="weekday"]:checked')]
+        .map(input => Number(input.value));
+      const goalId = $("editGoal").value;
+      const category = $("editCategory").value.trim();
+      const minutesInput = $("editMinutes").value;
+      const minutes = minutesInput === "" ? null : Number(minutesInput);
+
+      if (!validDay(date)) throw Error("Bitte einen gültigen Tag auswählen.");
+      if (repeat === "weekly" && !weekdays.length) {
+        throw Error("Bitte mindestens einen Wochentag auswählen.");
+      }
+      if (minutes !== null && (!Number.isFinite(minutes) || minutes < 0)) {
+        throw Error("Die Zeit muss mindestens 0 Minuten sein.");
+      }
+      if (id && data.focusV2.timer?.key === id &&
+          data.focusV2.timer.startedAt !== null) {
+        throw Error("Bitte den Timer vor dem Bearbeiten stoppen.");
+      }
+      if (!id && repeat && minutes !== null) {
+        throw Error("Bei einer Serie die Zeit erst in der jeweiligen Durchführung erfassen.");
+      }
+
+      change = draft => {
+        let record;
+        if (id) {
+          record = ensureRecord(draft, id);
+          Object.assign(record, { name, emoji: icon, date, goalId, category });
+        } else {
+          const task = {
+            id: uid(), name, emoji: icon, due: date, anchor: date,
+            repeat, interval, weekdays, goalId, category,
+            done: false, v2Imported: true, createdAt: new Date().toISOString()
+          };
+          draft.tasks.push(task);
+          if (!repeat) {
+            record = occurrence(task, date);
+            draft.focusV2.records[record.key] = record;
+          }
+        }
+
+        if (minutes !== null && record) {
+          record.sessions = [{
+            manual: true, ms: Math.round(minutes * 60000), day: date
+          }];
+        }
+      };
+    }
+
+    if (type === "event") {
+      const start = $("editStart").value;
+      const end = $("editEnd").value;
+      if (!start || !end || end <= start) {
+        throw Error("Die Endzeit muss nach der Startzeit liegen.");
+      }
+      const patch = { name, emoji: icon, start, end };
+      change = draft => {
+        if (id) {
+          const item = draft.events.find(x => x.id === id);
+          if (!item) throw Error("Termin nicht gefunden.");
+          Object.assign(item, patch);
+        } else draft.events.push({ id: uid(), ...patch });
+      };
+    }
+
+    if (type === "goal") {
+      const patch = {
+        name, emoji: icon, kind: $("editKind").value,
+        progress: Math.max(0, Math.min(100, Number($("editProgress").value) || 0)),
+        why: $("editWhy").value.trim()
+      };
+      change = draft => {
+        if (id) {
+          const item = draft.goals.find(x => x.id === id);
+          if (!item) throw Error("Ziel nicht gefunden.");
+          Object.assign(item, patch);
+        } else draft.goals.push({ id: uid(), ...patch });
+      };
+    }
+
+    if (await commit(change)) {
+      $("editor").close();
+      toast("✅ Online gespeichert");
+    }
+  } catch (error) {
+    $("formError").textContent = error.message;
+  }
+});
+
+/* ---------- Archivieren statt Verlust der Historie ---------- */
+
+async function cancelOccurrence(key) {
+  const item = findOccurrence(key);
+  if (item.status !== "open" || item.sessions.length) {
+    return toast("Dieser Eintrag enthält Statistikdaten. Bitte die Aufgabe im Archiv-Bereich archivieren.");
+  }
+  if (data.focusV2.timer?.key === key) {
+    return toast("Bitte den Timer zuerst beenden oder eine andere Aufgabe starten.");
+  }
+  if (!confirm("Diese Durchführung aus dem Plan entfernen? Sie zählt dann nicht in der Quote.")) {
+    return;
+  }
+  await commit(draft => {
+    ensureRecord(draft, key).status = "cancelled";
+  });
+}
+
+async function archiveTask(id) {
+  const task = data.tasks.find(item => item.id === id);
+  if (!task) return;
+
+  if (!confirm("Aufgabe / Serie archivieren? Vergangene Ergebnisse bleiben erhalten. " +
+    "Offene Durchführungen ab heute werden aus dem Plan entfernt.")) return;
+
+  await commit(draft => {
+    const before = occurrences(today(), draft)
+      .filter(item => item.taskId === id && item.date < today());
+
+    for (const item of before) {
+      draft.focusV2.records[item.key] ||= item;
+    }
+
+    if (draft.focusV2.timer &&
+        draft.focusV2.records[draft.focusV2.timer.key]?.taskId === id) {
+      stopActiveTimer(draft);
+      draft.focusV2.timer = null;
+    }
+
+    for (const record of Object.values(draft.focusV2.records)) {
+      if (record.taskId === id && record.date >= today() && record.status === "open") {
+        record.status = "cancelled";
+      }
+    }
+
+    draft.tasks.find(item => item.id === id).archiveDate = addDays(today(), -1);
+  });
+}
+
+async function restoreTask(id) {
+  await commit(draft => {
+    const task = draft.tasks.find(item => item.id === id);
+    if (!task) throw Error("Aufgabe nicht gefunden.");
+
+    /* Neue Serie ab heute; alte Historie bleibt unabhängig erhalten. */
+    const copy = {
+      ...clone(task), id: uid(), anchor: today(), due: today(),
+      done: false, completedAt: null, v2Imported: true
+    };
+    delete copy.archiveDate;
+    draft.tasks.push(copy);
+  });
+  toast("Neue Durchführung bzw. Serie ab heute angelegt.");
+}
+
+/* ---------- Navigation und Bedienung ---------- */
+
+function menu(open) {
+  $("drawer").classList.toggle("hidden", !open);
+  $("shade").classList.toggle("hidden", !open);
+  $("menuButton").setAttribute("aria-expanded", String(open));
+  if (open) $("drawer").querySelector("button").focus();
+  else $("menuButton").focus();
+}
+
+function navigate(view) {
+  currentView = view;
+  document.querySelectorAll(".view").forEach(section =>
+    section.classList.toggle("active", section.id === view)
+  );
+  document.querySelectorAll("#drawer [data-view]").forEach(button =>
+    button.classList.toggle("active", button.dataset.view === view)
+  );
+  menu(false);
+  render();
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+
+function movePeriod(direction) {
+  const day = $("statsDate").value || today();
+  $("statsDate").value = period === "week"
+    ? addDays(day, direction * 7)
+    : shiftMonth(day, direction * (period === "year" ? 12 : 1));
+  renderStats();
+}
+
+document.addEventListener("click", async event => {
+  const button = event.target.closest("[data-action]");
+  if (!button || button.disabled) return;
+  const action = button.dataset.action;
+  const id = button.dataset.id;
+
+  try {
+    if (action === "menu") return menu(true);
+    if (action === "menu-close") return menu(false);
+    if (action === "nav") return navigate(button.dataset.view);
+    if (action === "editor-close") return $("editor").close();
+    if (action === "register") return authenticate(true);
+    if (action === "refresh") return refresh();
+    if (action === "logout") {
+      if (busy) return;
+      const result = await client.auth.signOut();
+      if (result.error) notice(result.error.message);
+      return;
+    }
+
+    if (!ready || busy) return toast("Bitte anmelden oder Online-Daten aktualisieren.");
+
+    if (action === "backup") return backup();
+    if (action === "import") return importOldData();
+
+    if (action === "new-task") return openEditor("task");
+    if (action === "new-event") return openEditor("event");
+    if (action === "new-goal") return openEditor("goal");
+    if (action === "edit-task") return openEditor("task", id);
+    if (action === "edit-event") return openEditor("event", id);
+    if (action === "edit-goal") return openEditor("goal", id);
+
+    if (action === "start") return startTimer(id);
+    if (action === "timer-toggle") return toggleTimer();
+    if (action === "timer-finish") {
+      if (data.focusV2.timer) return setStatus(data.focusV2.timer.key, "done");
+      return;
+    }
+
+    if (action === "done") return setStatus(id, "done");
+    if (action === "missed") return setStatus(id, "missed");
+    if (action === "reopen") return setStatus(id, "open");
+    if (action === "cancel-task") return cancelOccurrence(id);
+    if (action === "archive-task") return archiveTask(id);
+    if (action === "restore-task") return restoreTask(id);
+
+    if (action === "move-today") {
+      return commit(draft => { ensureRecord(draft, id).date = today(); });
+    }
+
+    if (["archive-event", "archive-goal", "restore-event", "restore-goal"].includes(action)) {
+      const kind = action.endsWith("event") ? "events" : "goals";
+      const archived = action.startsWith("archive");
+      if (archived && !confirm("Eintrag archivieren? Er bleibt wiederherstellbar.")) return;
+      return commit(draft => {
+        const item = draft[kind].find(x => x.id === id);
+        if (!item) throw Error("Eintrag nicht gefunden.");
+        item.archived = archived;
+      });
+    }
+
+    if (action === "day-prev" || action === "day-next") {
+      $("calendarDate").value = addDays(
+        $("calendarDate").value || today(), action === "day-prev" ? -1 : 1);
+      return render();
+    }
+    if (action === "day-today") {
+      $("calendarDate").value = today();
+      return render();
+    }
+    if (action === "period") {
+      period = button.dataset.value;
+      return renderStats();
+    }
+    if (action === "period-prev") return movePeriod(-1);
+    if (action === "period-next") return movePeriod(1);
+    if (action === "period-today") {
+      $("statsDate").value = today();
+      return renderStats();
+    }
+  } catch (error) {
+    toast(error.message);
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !$("drawer").classList.contains("hidden")) {
+    menu(false);
+  }
+});
+
+$("calendarDate").addEventListener("change", () => {
+  if (!$("calendarDate").value) $("calendarDate").value = today();
+  render();
+});
+$("statsDate").addEventListener("change", () => {
+  if (!$("statsDate").value) $("statsDate").value = today();
+  renderStats();
+});
+
+/* ---------- Datensicherung und Übernahme alter lokaler Daten ---------- */
+
+function backup() {
+  const blob = new Blob([JSON.stringify({
+    exportedAt: new Date().toISOString(), version: revision, data
+  }, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "fokusplan-sicherung-" + today() + ".json";
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function importOldData() {
+  const raw = localStorage.getItem(OLD_LOCAL_KEY);
+  if (!raw) return toast("Keine alten lokalen Daten in diesem Browser gefunden.");
+
+  let local;
+  try { local = normalize(JSON.parse(raw)); }
+  catch (error) { return toast("Import nicht möglich: " + error.message); }
+
+  if (!confirm("Fehlende lokale Einträge anhand ihrer IDs ergänzen? " +
+    "Vorhandene Online-Einträge bleiben unverändert.")) return;
+
+  await commit(draft => {
+    const addedTaskIds = new Set();
+    for (const kind of ["tasks", "events", "goals"]) {
+      const ids = new Set(draft[kind].map(item => item.id));
+      for (const item of local[kind]) {
+        if (ids.has(item.id)) continue;
+        draft[kind].push(item);
+        ids.add(item.id);
+        if (kind === "tasks") addedTaskIds.add(item.id);
+      }
+    }
+    for (const [key, record] of Object.entries(local.focusV2.records)) {
+      if (addedTaskIds.has(record.taskId) &&
+          !Object.hasOwn(draft.focusV2.records, key)) {
+        draft.focusV2.records[key] = record;
+      }
+    }
+  });
+}
+
+/* ---------- Anmeldung ---------- */
+
+async function authenticate(register = false) {
+  if (authBusy || !client || !$("loginForm").reportValidity()) return;
+  authBusy = true;
+  $("loginForm").inert = true;
+  notice(register ? "Konto wird erstellt …" : "Anmeldung läuft …");
+
+  try {
+    const credentials = {
+      email: $("email").value.trim(),
+      password: $("password").value
+    };
+
+    const result = register
+      ? await client.auth.signUp({
+          ...credentials,
+          options: {
+            emailRedirectTo: "https://efe1656.github.io/Claude/index-1"
+          }
+        })
+      : await client.auth.signInWithPassword(credentials);
+
+    if (result.error) throw result.error;
+    $("password").value = "";
+
+    if (!result.data.session) {
+      notice("📧 Bitte die Bestätigungs-E-Mail öffnen und danach anmelden.");
+    }
+  } catch (error) {
+    notice("⚠️ Anmeldung: " + error.message);
+  } finally {
+    authBusy = false;
+    $("loginForm").inert = false;
+  }
+}
+
+$("loginForm").addEventListener("submit", event => {
+  event.preventDefault();
+  authenticate(false);
+});
+
+$("calendarDate").value = today();
+$("statsDate").value = today();
+render();
+controls();
+
+try {
+  if (!window.supabase) throw Error("Verbindungskomponente konnte nicht geladen werden.");
+
+  client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  client.auth.onAuthStateChange((event, session) => {
+    const nextUser = session?.user || null;
+    if (nextUser?.id === user?.id) return;
+
+    user = nextUser;
+    ready = false;
+    revision = null;
+    data = emptyData();
+    $("editor").close();
+    $("accountDetails").open = !user;
+    render();
+
+    if (user) setTimeout(() => refresh(), 0);
+    else notice("Bitte anmelden, um deine Online-Daten zu öffnen.");
+  });
+
+  client.auth.getSession().then(({ data: sessionData, error }) => {
+    if (error) return notice("Sitzung konnte nicht geladen werden: " + error.message);
+    if (!sessionData.session) {
+      $("accountDetails").open = true;
+      notice("Bitte anmelden oder ein Konto erstellen.");
+    }
+  }).catch(error => notice("Verbindung fehlgeschlagen: " + error.message));
+
+} catch (error) {
+  notice("⚠️ " + error.message + " Bitte Internetverbindung prüfen und neu laden.");
+}
+
+setInterval(tick, 1000);
+
+/* Fremde Änderungen regelmäßig laden, aber nicht während Formulareingaben. */
+setInterval(() => {
+  const editing = $("editor").open ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName);
+  if (user && ready && !busy && !document.hidden && !editing) refresh(true);
+}, 30000);
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && user && ready && !busy && !$("editor").open) {
+    refresh(true);
+  }
+});
+</script>
+<style>
+.daily-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  border: 1px solid #2b3547;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #19212d, #141a24);
+}
+
+.daily-progress__label {
+  margin: 0 0 8px;
+  color: #a4afc2;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.daily-progress h2 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  letter-spacing: -.02em;
+}
+
+.daily-progress__detail {
+  margin: 0;
+  color: #a4afc2;
+  font-size: .85rem;
+  line-height: 1.6;
+}
+
+.daily-progress__detail strong {
+  color: #f2f5fa;
+}
+
+.daily-progress__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 13px;
+  color: #a4afc2;
+  font-size: .72rem;
+}
+
+.daily-progress__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.daily-progress__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff914d;
+}
+
+.daily-progress__dot--remaining {
+  background: #536078;
+}
+
+.daily-progress__ring {
+  --progress: 0%;
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 112px;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #ff914d 0% var(--progress),
+    #303b4e var(--progress) 100%
+  );
+}
+
+.daily-progress__ring::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: #161d28;
+}
+
+.daily-progress__center {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+
+.daily-progress__percent {
+  color: #f2f5fa;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-progress__caption {
+  color: #a4afc2;
+  font-size: .65rem;
+}
+
+@media (max-width: 480px) {
+  .daily-progress {
+    padding: 19px 16px;
+    gap: 14px;
+  }
+
+  .daily-progress__ring {
+    flex-basis: 96px;
+    width: 96px;
+    height: 96px;
+  }
+
+  .daily-progress__percent {
+    font-size: 1.4rem;
+  }
+
+  .daily-progress h2 {
+    font-size: 1rem;
+  }
+}
+</style>
+
+<script>
+(() => {
+  /* Verhindert eine doppelte Einbindung des Diagramms. */
+  if (document.getElementById("dailyProgressCard")) return;
+
+  const card = document.createElement("section");
+  card.id = "dailyProgressCard";
+  card.className = "daily-progress";
+  card.setAttribute("aria-labelledby", "dailyProgressTitle");
+
+  card.innerHTML = `
+    <div>
+      <p class="daily-progress__label">Dein Tagesfortschritt</p>
+      <h2 id="dailyProgressTitle">Jeder Schritt zählt.</h2>
+
+      <p class="daily-progress__detail" id="dailyProgressDetail"></p>
+
+      <div class="daily-progress__legend" aria-hidden="true">
+        <span>
+          <i class="daily-progress__dot"></i>
+          Geschafft
+        </span>
+        <span>
+          <i class="daily-progress__dot daily-progress__dot--remaining"></i>
+          Übrig
+        </span>
+      </div>
+    </div>
+
+    <div
+      class="daily-progress__ring"
+      id="dailyProgressRing"
+      role="progressbar"
+      aria-label="Heute geschaffte Aufgaben"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="0"
+    >
+      <div class="daily-progress__center" aria-hidden="true">
+        <span class="daily-progress__percent" id="dailyProgressPercent">
+          0 %
+        </span>
+        <span class="daily-progress__caption">geschafft</span>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("homeMetrics").insertAdjacentElement("afterend", card);
+
+  function updateDailyProgress() {
+    const date = today();
+
+    const tasks = occurrences(date).filter(item => item.date === date);
+    const total = tasks.length;
+    const completed = tasks.filter(item => item.status === "done").length;
+    const missed = tasks.filter(item => item.status === "missed").length;
+    const open = tasks.filter(item => item.status === "open").length;
+
+    const exactPercent = total ? completed / total * 100 : 0;
+
+    /* Zeigt erst dann 100 %, wenn wirklich alles geschafft ist. */
+    const percent = completed === total && total > 0
+      ? 100
+      : Math.min(99, Math.round(exactPercent));
+
+    const ring = document.getElementById("dailyProgressRing");
+    const detail = document.getElementById("dailyProgressDetail");
+    const title = document.getElementById("dailyProgressTitle");
+
+    ring.style.setProperty("--progress", exactPercent + "%");
+    ring.setAttribute("aria-valuenow", String(percent));
+    ring.setAttribute(
+      "aria-valuetext",
+      total
+        ? `${completed} von ${total} Aufgaben geschafft. ` +
+          `${open} offen, ${missed} nicht geschafft.`
+        : "Für heute sind keine Aufgaben geplant."
+    );
+
+    document.getElementById("dailyProgressPercent").textContent =
+      percent + " %";
+
+    if (!total) {
+      title.textContent = "Dein Tag beginnt mit einem Plan.";
+      detail.textContent = "Heute sind noch keine Aufgaben geplant.";
+      card.querySelector(".daily-progress__legend").hidden = true;
+      return;
+    }
+
+    card.querySelector(".daily-progress__legend").hidden = false;
+
+    title.textContent = completed === total
+      ? "Alles für heute geschafft. ✨"
+      : "Jeder Schritt zählt.";
+
+    detail.innerHTML =
+      `<strong>${completed} von ${total}</strong> Aufgaben geschafft` +
+      `<br>${open} offen` +
+      (missed ? ` · ${missed} nicht geschafft` : "");
+  }
+
+  /* Aktualisiert sich beim Speichern, Abhaken und Online-Aktualisieren. */
+  const previousRender = render;
+
+  render = function (...args) {
+    const result = previousRender.apply(this, args);
+    updateDailyProgress();
+    return result;
+  };
+
+  updateDailyProgress();
+
+  /* Auch bei einem Tageswechsel die Anzeige aktualisieren. */
+  let displayedDay = today();
+
+  setInterval(() => {
+    if (today() !== displayedDay) {
+      displayedDay = today();
+      render();
+    }
+  }, 30000);
+})();
+</script>
+<style>
+  #homeMetrics {
+    display: none;
+  }
+</style>tes
+<style>
+/* Statistik auf schmalen Bildschirmen ohne seitliches Wischen */
+@media (max-width: 720px) {
+  #statistics .table-scroll {
+    overflow: visible;
+    min-width: 0;
+  }
+
+  #taskStats table,
+  #taskStats tbody {
+    display: block;
+    width: 100%;
+  }
+
+  #taskStats thead {
+    display: none;
+  }
+
+  #taskStats tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    background: #101620;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+
+  #taskStats td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Aufgabenname */
+  #taskStats td:first-child {
+    grid-column: 1 / -1;
+    min-width: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    font-size: .95rem;
+    font-weight: 700;
+  }
+
+  /* Beschriftungen direkt bei den Zahlen */
+  #taskStats td:not(:first-child)::before {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--muted);
+    font-size: .64rem;
+    font-weight: 500;
+  }
+
+  #taskStats td:nth-child(2)::before {
+    content: "✅ Geschafft";
+  }
+
+  #taskStats td:nth-child(3)::before {
+    content: "❌ Nicht geschafft";
+  }
+
+  #taskStats td:nth-child(4)::before {
+    content: "📌 Offen";
+  }
+
+  #taskStats td:nth-child(2),
+  #taskStats td:nth-child(3),
+  #taskStats td:nth-child(4) {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  /* Zeit bekommt eine eigene, vollständig sichtbare Zeile */
+  #taskStats td:nth-child(5) {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  #taskStats td:nth-child(5)::before {
+    content: "⏱️ Erfasste Zeit";
+    margin: 0;
+    font-size: .75rem;
+  }
+
+  /* Auch Kennzahlen, Datumsauswahl und Diagramme passen sich an */
+  #statistics .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  #statistics .metric {
+    min-width: 0;
+    padding: 13px;
+  }
+
+  #statistics .metric strong {
+    font-size: clamp(1.05rem, 5vw, 1.5rem);
+    overflow-wrap: anywhere;
+  }
+
+  #statistics .actions {
+    flex-wrap: wrap;
+  }
+
+  #statistics #statsDate {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 130px;
+  }
+
+  #statistics .chart-row {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+    gap: 8px;
+  }
+
+  #statistics .chart-row > :last-child {
+    text-align: right;
+  }
+
+  #goalStats .item {
+    flex-wrap: wrap;
+  }
+
+  #goalStats .body {
+    overflow-wrap: anywhere;
+  }
+}
+</style>
+<style>
+/* ===== Kompakter Kopfbereich ===== */
+
+.topbar {
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.topbar > .flex {
+  gap: 9px;
+}
+
+#connectionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #161c27;
+}
+
+.connection-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f4bf56;
+}
+
+#connectionButton[data-state="connected"] .connection-dot {
+  background: #66dab0;
+  box-shadow: 0 0 0 4px #66dab012;
+}
+
+#connectionButton[data-state="loading"] .connection-dot {
+  background: #f4bf56;
+  box-shadow: 0 0 0 4px #f4bf5612;
+}
+
+#connectionButton[data-state="error"] .connection-dot {
+  background: #ff8d9c;
+  box-shadow: 0 0 0 4px #ff8d9c12;
+}
+
+/* Konto bleibt über den Statuspunkt erreichbar. */
+.account.compact-account-closed {
+  display: none;
+}
+
+.account {
+  margin-bottom: 12px;
+}
+
+#homeMetrics {
+  display: none;
+}
+
+.hero {
+  padding: 20px 12px;
+  margin-bottom: 12px;
+  border-radius: 18px;
+}
+
+.hero .eyebrow {
+  display: none;
+}
+
+.hero h1 {
+  margin: 0 0 7px;
+  font-size: clamp(1.65rem, 6.6vw, 2.7rem);
+  letter-spacing: -.045em;
+  white-space: nowrap;
+}
+
+.hero p {
+  font-size: .78rem;
+}
+
+/* Keine weitere Motivationskarte auf Home. */
+#whyCard {
+  display: none;
+}
+
+/* ===== Kreisdiagramm im Mittelpunkt ===== */
+
+#dailyProgressCard {
+  justify-content: center;
+  padding: 13px 16px;
+  margin-bottom: 12px;
+  gap: 0;
+  border-radius: 18px;
+}
+
+/* Linke Textspalte ausblenden. */
+#dailyProgressCard > div:first-child {
+  display: none;
+}
+
+#dailyProgressCard .daily-progress__ring {
+  flex: 0 0 106px;
+  width: 106px;
+  height: 106px;
+}
+
+#dailyProgressCard .daily-progress__ring::before {
+  inset: 8px;
+}
+
+#dailyProgressCard .daily-progress__center {
+  gap: 4px;
+}
+
+#dailyProgressCard .daily-progress__percent {
+  font-size: 1.6rem;
+}
+
+#dailyProgressCard .daily-progress__caption {
+  font-size: .65rem;
+  color: #b4bfd0;
+}
+
+/* ===== Weniger Abstände auf Home ===== */
+
+#home > .actions {
+  margin-bottom: 12px !important;
+  gap: 8px;
+}
+
+#home > .actions button {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: .85rem;
+}
+
+#home .card {
+  padding: 14px;
+  margin-bottom: 12px;
+  border-radius: 17px;
+}
+
+#home .card h2 {
+  margin-bottom: 8px;
+  font-size: .96rem;
+}
+
+#home .empty {
+  padding: 8px 0;
+  font-size: .82rem;
+}
+
+#home .grid {
+  gap: 12px;
+}
+
+/* ===== Aufgaben als kompakte Zeilen ===== */
+
+#homeTasks .item {
+  align-items: center;
+  gap: 9px;
+  padding: 11px 0;
+}
+
+#homeTasks .emoji,
+#homeEvents .emoji {
+  flex: 0 0 35px;
+  width: 35px;
+  height: 35px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+}
+
+#homeTasks .body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 10px;
+  align-items: center;
+}
+
+#homeTasks .title {
+  grid-column: 1;
+  font-size: .9rem;
+  line-height: 1.3;
+}
+
+#homeTasks .body > small {
+  grid-column: 1;
+  font-size: .69rem;
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
+#homeTasks .body > div:not(.title):not(.actions) {
+  grid-column: 1;
+  line-height: 1;
+  margin-top: 3px;
+}
+
+#homeTasks .badge {
+  font-size: .64rem;
+  padding: 3px 5px;
+  margin: 3px 3px 0 0;
+}
+
+/* Wiederholung und fehlende Zeit nicht bei jeder Aufgabe ausschreiben. */
+#homeTasks .badge.compact-secondary {
+  display: none;
+}
+
+#homeTasks .actions {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  display: grid;
+  grid-template-columns: repeat(3, 36px);
+  justify-content: end;
+  gap: 4px;
+  margin: 0;
+}
+
+#homeTasks .actions button {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 6px;
+  border-radius: 9px;
+  font-size: .88rem;
+  line-height: 1.2;
+}
+
+#homeTasks .actions button[data-action="move-today"] {
+  grid-column: span 2;
+  font-size: .7rem;
+}
+
+/* ===== Kompakte Termine ===== */
+
+#homeEvents .item {
+  align-items: center;
+  gap: 9px;
+  padding: 11px 0;
+}
+
+#homeEvents .body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 10px;
+  align-items: center;
+}
+
+#homeEvents .title {
+  grid-column: 1;
+  font-size: .9rem;
+}
+
+#homeEvents .badge {
+  grid-column: 1;
+  justify-self: start;
+  font-size: .7rem;
+  margin-top: 5px;
+}
+
+#homeEvents .actions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  margin: 0;
+  gap: 4px;
+}
+
+#homeEvents .actions button {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 6px;
+  border-radius: 9px;
+}
+
+/* Serienverwaltung ist weiterhin aufklappbar. */
+#home > details.card > .muted {
+  display: none;
+}
+
+#home > details.card summary {
+  font-size: .82rem;
+}
+
+/* ===== iPhone / schmale Displays ===== */
+
+@media (max-width: 720px) {
+  .wrap {
+    padding: 12px 12px 35px;
+  }
+
+  body.has-active-timer .wrap {
+    padding-bottom: 155px;
+  }
+
+  #home .grid {
+    gap: 0;
+  }
+
+  .topbar .brand {
+    font-size: .65rem;
+    letter-spacing: .1em;
+  }
+
+  #todayLabel {
+    margin-left: auto;
+    font-size: .68rem;
+    white-space: nowrap;
+  }
+
+  #homeTasks .actions {
+    grid-template-columns: repeat(3, 34px);
+  }
+
+  #homeTasks .actions button,
+  #homeEvents .actions button {
+    min-width: 34px;
+    min-height: 36px;
+  }
+}
+
+/* Größere Schrift / sehr kleine Displays:
+   Buttons umbrechen statt Inhalte abzuschneiden. */
+@media (max-width: 355px) {
+  .hero h1 {
+    font-size: 1.45rem;
+  }
+
+  #homeTasks .body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #homeTasks .actions {
+    grid-column: 1;
+    grid-row: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    margin-top: 7px;
+  }
+}
+</style>
+
+<script>
+(() => {
+  if (document.getElementById("connectionButton")) return;
+
+  const accountPanel = document.querySelector(".account");
+  const accountDetails = document.getElementById("accountDetails");
+  const topbar = document.querySelector(".topbar");
+
+  const statusButton = document.createElement("button");
+  statusButton.id = "connectionButton";
+  statusButton.type = "button";
+  statusButton.dataset.state = "loading";
+  statusButton.setAttribute("aria-label", "Verbindung wird geprüft");
+  statusButton.setAttribute("aria-expanded", "false");
+  statusButton.setAttribute("aria-controls", "accountDetails");
+  statusButton.innerHTML =
+    '<span class="connection-dot" aria-hidden="true"></span>';
+
+  topbar.appendChild(statusButton);
+
+  /* Nach der Anmeldung ist das Konto zunächst eingeklappt. */
+  let accountVisible = !user;
+  let previousUserId = user?.id || null;
+
+  function setAccountVisible(visible) {
+    accountVisible = visible;
+    accountPanel.classList.toggle("compact-account-closed", !visible);
+    accountDetails.open = visible;
+    statusButton.setAttribute("aria-expanded", String(visible));
+  }
+
+  statusButton.addEventListener("click", () => {
+    setAccountVisible(!accountVisible);
+
+    if (accountVisible) {
+      accountPanel.scrollIntoView({
+        behavior: "auto",
+        block: "nearest"
+      });
+    }
+  });
+
+  function updateConnectionDot() {
+    const message = document.getElementById("syncStatus").textContent || "";
+    const currentUserId = user?.id || null;
+
+    /* Bei Abmeldung öffnen, nach erfolgreicher Anmeldung schließen. */
+    if (currentUserId !== previousUserId) {
+      previousUserId = currentUserId;
+      setAccountVisible(!currentUserId);
+    }
+
+    let state;
+    let label;
+
+    if (!navigator.onLine) {
+      state = "error";
+      label = "Offline – Kontostatus öffnen";
+    } else if (/⚠️|fehlgeschlagen|nicht bestätigt/i.test(message)) {
+      state = "error";
+      label = "Verbindungsfehler – Details öffnen";
+    } else if (busy || authBusy || /lädt|geladen|gespeichert …|läuft|vorbereitet/i.test(message)) {
+      state = "loading";
+      label = "Lädt oder speichert – Kontostatus öffnen";
+    } else if (user && ready) {
+      state = "connected";
+      label = "Online verbunden – Kontoeinstellungen öffnen";
+    } else {
+      state = "loading";
+      label = "Nicht verbunden – Anmeldung öffnen";
+    }
+
+    statusButton.dataset.state = state;
+    statusButton.setAttribute("aria-label", label);
+    statusButton.title = label;
+  }
+
+  function compactHome() {
+    /* Das bestehende Kreisdiagramm liefert die Prozentzahl.
+       Darunter nur die kurze Mengenangabe anzeigen. */
+    const ringCaption = document.querySelector(
+      "#dailyProgressCard .daily-progress__caption"
+    );
+
+    if (ringCaption) {
+      const date = today();
+      const todaysTasks = occurrences(date)
+        .filter(item => item.date === date);
+
+      const completed = todaysTasks
+        .filter(item => item.status === "done").length;
+
+      ringCaption.textContent = todaysTasks.length
+        ? `${completed}/${todaysTasks.length} geschafft`
+        : "Keine Aufgaben";
+    }
+
+    /* Unnötige Zusatzlabels in der kompakten Homeansicht ausblenden.
+       Kalender und Statistik behalten die ausführlichen Angaben. */
+    document.querySelectorAll("#homeTasks .badge").forEach(badge => {
+      const text = badge.textContent.trim();
+
+      badge.classList.toggle(
+        "compact-secondary",
+        text.includes("Wiederholung") ||
+        text.includes("Zeit nicht erfasst")
+      );
+    });
+
+    document.body.classList.toggle(
+      "has-active-timer",
+      Boolean(user && data.focusV2.timer)
+    );
+
+    updateConnectionDot();
+  }
+
+  /* Erhält auch die zuvor ergänzte Diagramm-Aktualisierung. */
+  const previousRender = render;
+
+  render = function (...args) {
+    const result = previousRender.apply(this, args);
+    compactHome();
+    return result;
+  };
+
+  /* Statusänderungen erfolgen auch außerhalb von render(). */
+  const statusObserver = new MutationObserver(updateConnectionDot);
+
+  statusObserver.observe(document.getElementById("syncStatus"), {
+    childList: true,
+    characterData: true,
+    subtree: true
+  });
+
+  window.addEventListener("online", updateConnectionDot);
+  window.addEventListener("offline", updateConnectionDot);
+
+  setAccountVisible(accountVisible);
+  compactHome();
+})();
+</script>
+</body>
+</html>
