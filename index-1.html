@@ -5409,5 +5409,353 @@ document.addEventListener("visibilitychange", () => {
   if (ready) render();
 })();
 </script>
+<style id="fp-compact-tasks-style">
+/* Home und Kalender: kompakte Aufgaben */
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.item.fp-compact-task {
+  display: grid !important;
+  grid-template-columns: 30px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px !important;
+  margin: 6px 0 !important;
+  min-width: 0;
+  border: 1px solid #2b3848 !important;
+  border-left: 3px solid #435267 !important;
+  border-radius: 12px !important;
+  background: #141e2a !important;
+}
+
+/* Kleines Aufgaben-Emoji */
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task > .emoji {
+  display: grid;
+  place-items: center;
+  width: 30px !important;
+  height: 32px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: #ffffff06 !important;
+  font-size: 20px !important;
+}
+
+/* Titel und Informationen links */
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task > .body {
+  display: block !important;
+  min-width: 0 !important;
+}
+
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task .title {
+  margin: 0 !important;
+  color: #f4f7fb !important;
+  font-size: 14px !important;
+  font-weight: 750 !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere;
+}
+
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task .fp-task-date {
+  display: block;
+  margin-top: 2px !important;
+  color: #91a0b4 !important;
+  font-size: 10px !important;
+  line-height: 1.3 !important;
+}
+
+/* Ziele bewusst dezent */
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task .fp-task-goals {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-top: 3px;
+  color: #98a6b9;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task .fp-task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 7px;
+  margin-top: 3px !important;
+  color: #9eacc0;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.fp-task-outcome {
+  font-weight: 800;
+}
+
+/* Buttons rechts: kleine Symbole, ausreichende Klickfläche */
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task > .actions {
+  display: grid !important;
+  grid-template-columns: repeat(3, 34px) !important;
+  grid-auto-rows: minmax(34px, auto);
+  justify-content: end;
+  align-items: center;
+  gap: 3px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task > .actions button {
+  display: grid;
+  place-items: center;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid #344154 !important;
+  border-radius: 8px !important;
+  background: #0e1722 !important;
+  color: #e8eef7 !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  touch-action: manipulation;
+}
+
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task button[data-action="done"] {
+  color: #58eca4 !important;
+  border-color: #287653 !important;
+  background: #123726 !important;
+  font-size: 19px !important;
+}
+
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task button[data-action="missed"] {
+  color: #ff8d9c !important;
+  border-color: #803b4a !important;
+  background: #391e29 !important;
+  font-size: 19px !important;
+}
+
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task button:focus-visible {
+  outline: 2px solid #ffa34a;
+  outline-offset: 2px;
+}
+
+/* Deutlich sichtbarer Abschluss */
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task[data-task-status="done"] {
+  background: linear-gradient(100deg, #123c2c, #14251f) !important;
+  border-color: #297953 !important;
+  border-left-color: #53e99d !important;
+}
+
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task[data-task-status="missed"] {
+  background: linear-gradient(100deg, #43212c, #291b24) !important;
+  border-color: #8a4053 !important;
+  border-left-color: #ff7188 !important;
+}
+
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task[data-task-status="done"] > .emoji {
+  color: #66ffb0 !important;
+  background: transparent !important;
+  font-size: 32px !important;
+  font-weight: 900;
+}
+
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task[data-task-status="missed"] > .emoji {
+  color: #ff8296 !important;
+  background: transparent !important;
+  font-size: 32px !important;
+  font-weight: 900;
+}
+
+:is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+.fp-compact-task[data-task-status="done"] .title {
+  color: #c3efda !important;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: #67c596;
+}
+
+.fp-compact-task[data-task-status="done"] .fp-task-outcome {
+  color: #76edb1;
+}
+
+.fp-compact-task[data-task-status="missed"] .fp-task-outcome {
+  color: #ff9cad;
+}
+
+/* Sehr schmale Displays: mehr Platz für den Aufgabennamen */
+@media (max-width: 360px) {
+  :is(#homeTasks, #calendarTasks, #fpModernHome .fp-tasks)
+  .fp-compact-task > .actions {
+    grid-template-columns: repeat(2, 34px) !important;
+  }
+}
+</style>
+
+<script>
+(() => {
+  "use strict";
+
+  if (window.fpCompactTasksInstalled) return;
+
+  if (typeof taskRow !== "function") {
+    console.warn("Kompakte Aufgaben: taskRow fehlt.");
+    return;
+  }
+
+  window.fpCompactTasksInstalled = true;
+
+  const originalTaskRow = taskRow;
+
+  taskRow = function(item) {
+    const template = document.createElement("template");
+    template.innerHTML = originalTaskRow.apply(this, arguments);
+
+    const article = template.content.querySelector("article.item");
+    if (!article) return template.innerHTML;
+
+    const body = article.querySelector(".body");
+    const actions = article.querySelector(".actions");
+    const icon = article.querySelector(".emoji");
+    const title = article.querySelector(".title");
+
+    if (!body || !actions || !icon || !title) {
+      return template.innerHTML;
+    }
+
+    article.classList.add("fp-compact-task");
+    article.dataset.taskStatus = item.status;
+
+    /* Originalbuttons behalten ihre Aktionen und Datensatz-IDs. */
+    article.appendChild(actions);
+
+    const done = item.status === "done";
+    const missed = item.status === "missed";
+
+    if (done || missed) {
+      icon.textContent = done ? "✓" : "✕";
+      icon.setAttribute("aria-hidden", "true");
+    }
+
+    /* Das Datum ist auf Home heute bereits oben sichtbar. */
+    const dateLine = body.querySelector(":scope > small");
+
+    if (dateLine) {
+      dateLine.classList.add("fp-task-date");
+
+      if (item.date === today() && !item.category) {
+        dateLine.remove();
+      }
+    }
+
+    /* Bestehende Badge-Zeile durch ruhige Unterzeilen ersetzen. */
+    body.querySelectorAll(":scope > div").forEach(element => {
+      if (element !== title) element.remove();
+    });
+
+    const task = data.tasks.find(entry => entry.id === item.taskId);
+
+    /* Mehrere tatsächlich verknüpfte Ziele berücksichtigen. */
+    const linkedIds = new Set([
+      ...(Array.isArray(item.goalIds) ? item.goalIds : []),
+      ...(Array.isArray(task?.goalIds) ? task.goalIds : []),
+      item.goalId,
+      task?.goalId
+    ].filter(Boolean));
+
+    const goalNames = [...linkedIds]
+      .map(id => data.goals.find(goal => goal.id === id))
+      .filter(goal => goal && !goal.archived)
+      .map(goal => goal.name);
+
+    if (goalNames.length) {
+      const goals = document.createElement("div");
+      goals.className = "fp-task-goals";
+      goals.textContent = "🎯 " + goalNames.join(" · ");
+      goals.title = goalNames.join(" · ");
+      body.appendChild(goals);
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "fp-task-meta";
+
+    const outcome = document.createElement("span");
+    outcome.className = "fp-task-outcome";
+
+    outcome.textContent = done
+      ? "Geschafft"
+      : missed
+      ? "Nicht geschafft"
+      : item.date < today()
+      ? "⏳ Überfällig"
+      : "Offen";
+
+    meta.appendChild(outcome);
+
+    const time = recordedTime(item);
+
+    if (time > 0) {
+      const timeLabel = document.createElement("span");
+      timeLabel.textContent = "⏱ " + duration(time);
+      meta.appendChild(timeLabel);
+    }
+
+    if (task?.repeat) {
+      const repeat = document.createElement("span");
+      repeat.textContent = "↻";
+      repeat.title = "Wiederkehrende Aufgabe";
+      repeat.setAttribute("aria-label", "Wiederkehrende Aufgabe");
+      meta.appendChild(repeat);
+    }
+
+    body.appendChild(meta);
+
+    /* Nur Button-Symbole ändern – Funktionen bleiben bestehen. */
+    const compactSymbols = {
+      done: "✓",
+      missed: "✕",
+      reopen: "↩",
+      start: "▶",
+      "move-today": "📅"
+    };
+
+    actions.querySelectorAll("button[data-action]").forEach(button => {
+      const action = button.dataset.action;
+
+      if (compactSymbols[action]) {
+        button.textContent = compactSymbols[action];
+      }
+
+      if (action === "timer-toggle") {
+        button.textContent =
+          data.focusV2.timer?.startedAt != null ? "Ⅱ" : "▶";
+      }
+
+      button.type = "button";
+    });
+
+    return template.innerHTML;
+  };
+
+  if (typeof ready !== "undefined" && ready) {
+    render();
+  }
+})();
+</script>
 </body>
 </html>
