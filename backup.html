@@ -5873,6 +5873,715 @@ document.addEventListener("visibilitychange", () => {
   }
 }
 </style>
+<style>
+#fpBatch {
+  width: min(760px, calc(100vw - 24px));
+  max-height: 90dvh;
+  overflow: auto;
+  box-sizing: border-box;
+  background: #101923;
+  color: #eef3fa;
+  border: 1px solid #334155;
+  border-radius: 20px;
+  padding: 18px;
+}
+#fpBatch::backdrop {
+  background: #000b;
+  backdrop-filter: blur(5px);
+}
+#fpBatch * { box-sizing: border-box; }
+#fpBatch h2 { margin: 0; font-size: 21px; }
+#fpBatch p { color: #a6b4c6; font-size: 13px; }
+#fpBatch .fb-head,
+#fpBatch .fb-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#fpBatch .fb-head { justify-content: space-between; }
+#fpBatch input,
+#fpBatch select,
+#fpBatch textarea,
+#fpBatch button {
+  font: inherit;
+}
+#fpBatch input,
+#fpBatch select,
+#fpBatch textarea {
+  width: 100%;
+  min-width: 0;
+  background: #0b121a;
+  color: #eef3fa;
+  border: 1px solid #334155;
+  border-radius: 9px;
+  padding: 9px;
+}
+#fpBatch textarea {
+  min-height: 155px;
+  resize: vertical;
+  margin: 10px 0;
+}
+#fpBatch button,
+.fp-batch-open {
+  border: 1px solid #3a495c;
+  border-radius: 10px;
+  padding: 10px 13px;
+  background: #1a2735;
+  color: #fff;
+  cursor: pointer;
+}
+#fpBatch button:disabled { opacity: .5; cursor: wait; }
+#fpBatch .fb-primary {
+  background: #ff7a18;
+  color: #10151c;
+  border-color: #ff7a18;
+  font-weight: 800;
+}
+#fpBatch label {
+  display: block;
+  color: #b9c6d6;
+  font-size: 12px;
+}
+#fpBatch .fb-date { width: 155px; }
+#fpBatch .fb-row {
+  margin: 10px 0;
+  padding: 12px;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #131f2b;
+}
+#fpBatch .fb-title {
+  display: grid;
+  grid-template-columns: 45px minmax(0, 1fr) 40px;
+  gap: 6px;
+}
+#fpBatch .fb-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 10px;
+}
+#fpBatch details { margin-top: 9px; }
+#fpBatch summary { cursor: pointer; font-size: 13px; }
+#fpBatch .fb-goals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 9px;
+}
+#fpBatch .fb-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+#fpBatch input[type="checkbox"] { width: 17px; height: 17px; }
+#fpBatch .fb-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+#fpBatch .fb-note {
+  margin: 8px 0 0;
+  color: #ffc471;
+  overflow-wrap: anywhere;
+}
+#fpBatch .fb-skip { opacity: .6; }
+#fpBatch #fbResult {
+  white-space: pre-line;
+  font-size: 14px;
+  line-height: 1.6;
+}
+#fpBatch .fb-footer {
+  position: sticky;
+  bottom: -18px;
+  background: #101923;
+  padding: 12px 0;
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 450px) {
+  #fpBatch { padding: 12px; }
+  #fpBatch .fb-goals { grid-template-columns: 1fr; }
+}
+</style>
 
+<script>
+(() => {
+  "use strict";
+  if (window.fpBatchInstalled) return;
+
+  const required = [
+    typeof commit === "function",
+    typeof occurrence === "function",
+    typeof occurrences === "function",
+    typeof validDay === "function",
+    typeof autoEmoji === "function"
+  ];
+  if (required.includes(false)) {
+    console.error("Sammelerfassung: FokusPlan-Hauptcode fehlt.");
+    return;
+  }
+  window.fpBatchInstalled = true;
+
+  const key = value => String(value ?? "")
+    .normalize("NFKC")
+    .replace(
+      /[\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}\uFE0E\uFE0F\u200D\u20E3]/gu,
+      ""
+    )
+    .replace(/\s+/gu, " ")
+    .trim()
+    .toLocaleLowerCase("de-DE");
+
+  const clean = value => String(value ?? "").trim();
+  const days = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+  let rows = [];
+  let saving = false;
+
+  const dialog = document.createElement("dialog");
+  dialog.id = "fpBatch";
+  dialog.innerHTML = `
+    <div class="fb-head">
+      <h2>⚡ Mehrere Aufgaben</h2>
+      <button type="button" id="fbClose" aria-label="Schließen">✕</button>
+    </div>
+    <p>Eine Aufgabe pro Zeile. Ziele und Wiederholungen lassen sich
+       anschließend pro Aufgabe ändern.</p>
+
+    <div class="fb-tools">
+      <label class="fb-date">Gemeinsames Datum
+        <input id="fbDate" type="date">
+      </label>
+      <button type="button" id="fbToday">Heute</button>
+      <button type="button" id="fbTomorrow">Morgen</button>
+    </div>
+
+    <textarea id="fbInput" aria-label="Aufgaben für Sammelerfassung"
+      placeholder="Gym
+KI lernen
+Paket abgeben"></textarea>
+
+    <button type="button" id="fbPreview">Vorschau erstellen</button>
+    <div id="fbRows"></div>
+    <div id="fbResult" role="status" aria-live="polite"></div>
+
+    <div class="fb-footer">
+      <button type="button" id="fbSave" class="fb-primary" disabled>
+        Alle hinzufügen
+      </button>
+    </div>
+  `;
+  document.body.append(dialog);
+  const el = id => dialog.querySelector("#" + id);
+
+  const goals = () => data.goals.filter(g => !g.archived);
+  const idsOf = item => [...new Set(
+    [...(item?.goalIds || []), item?.goalId].filter(Boolean)
+  )];
+
+  function suggestedGoals(name) {
+    const valid = new Set(goals().map(g => g.id));
+    const records = Object.values(data.focusV2.records)
+      .filter(r => key(r.name) === key(name))
+      .sort((a, b) => b.date.localeCompare(a.date));
+
+    const tasks = [...data.tasks].reverse()
+      .filter(t => !t.archived && key(t.name) === key(name));
+
+    const previous = [...records, ...tasks].find(
+      item => idsOf(item).some(id => valid.has(id))
+    );
+    return previous ? idsOf(previous).filter(id => valid.has(id)) : [];
+  }
+
+  function dateValue(value) {
+    const text = clean(value).toLowerCase();
+    if (text === "heute") return today();
+    if (text === "morgen") return addDays(today(), 1);
+    if (text === "gestern") return addDays(today(), -1);
+    const match = text.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    const result = match ? `${match[3]}-${match[2]}-${match[1]}` : text;
+    if (!validDay(result)) throw Error("Ungültiges Datum: " + value);
+    return result;
+  }
+
+  function parseRepeat(value) {
+    const text = key(value);
+    if (["einmalig", "einmal", "keine"].includes(text)) {
+      return { repeat: "", weekdays: [] };
+    }
+    if (["täglich", "taeglich", "daily"].includes(text)) {
+      return { repeat: "daily", weekdays: [] };
+    }
+    if (["monatlich", "monthly"].includes(text)) {
+      return { repeat: "monthly", weekdays: [] };
+    }
+    const tokens = text.split(/[\s,;/]+/).filter(Boolean);
+    const numbers = tokens.map(t => days.findIndex(
+      day => day.toLowerCase() === t
+    ));
+    if (numbers.length && numbers.every(n => n >= 0)) {
+      return { repeat: "weekly", weekdays: [...new Set(numbers)] };
+    }
+    throw Error("Wiederholung nicht erkannt: " + value +
+      ". Nutze einmalig, täglich, monatlich oder Mo,Mi,Fr.");
+  }
+
+  function parseLine(line, defaultDate) {
+    const [title, ...fields] = line.split("|").map(clean);
+    if (!key(title)) throw Error("Eine Aufgabe benötigt einen Namen.");
+
+    const row = {
+      name: title,
+      emoji: autoEmoji(title, "task"),
+      date: defaultDate,
+      repeat: "",
+      interval: 1,
+      weekdays: [],
+      goalIds: suggestedGoals(title),
+      goalReviewed: false,
+      minutes: "",
+      status: "open",
+      errors: []
+    };
+    row.goalReviewed = row.goalIds.length > 0;
+
+    for (const field of fields) {
+      const colon = field.indexOf(":");
+      if (colon < 0) {
+        Object.assign(row, parseRepeat(field));
+        continue;
+      }
+      const label = key(field.slice(0, colon));
+      const value = clean(field.slice(colon + 1));
+
+      if (label === "datum") row.date = dateValue(value);
+      else if (label === "emoji") row.emoji = value;
+      else if (label === "wiederholung") {
+        Object.assign(row, parseRepeat(value));
+      } else if (label === "intervall") {
+        row.interval = Number(value);
+      } else if (["minuten", "dauer"].includes(label)) {
+        row.minutes = value.replace(",", ".");
+      } else if (label === "status") {
+        const statuses = {
+          offen: "open",
+          geschafft: "done",
+          erledigt: "done",
+          "nicht geschafft": "missed"
+        };
+        if (!statuses[key(value)]) throw Error("Unbekannter Status: " + value);
+        row.status = statuses[key(value)];
+      } else if (["ziel", "ziele"].includes(label)) {
+        row.goalIds = [];
+        row.goalReviewed = false;
+        if (["ohne", "ohne ziel", "keines"].includes(key(value))) {
+          row.goalReviewed = true;
+        } else {
+          for (const name of value.split(";").map(clean)) {
+            const matches = goals().filter(g => key(g.name) === key(name));
+            if (matches.length === 1) row.goalIds.push(matches[0].id);
+            else row.errors.push("Ziel nicht eindeutig gefunden: " + name);
+          }
+          row.goalReviewed = row.errors.length === 0;
+        }
+      } else {
+        throw Error("Unbekanntes Feld: " + label);
+      }
+    }
+    return row;
+  }
+
+  // Gleicher Name am selben Tag: nicht erneut anlegen.
+  // Bei neuen Serien zusätzlich gleichnamige aktive Serien erkennen.
+  function duplicate(row, source) {
+    const existing = occurrences(row.date, source).some(item =>
+      item.date === row.date && key(item.name) === key(row.name)
+    );
+    if (existing) return "An diesem Tag bereits vorhanden.";
+
+    if (row.repeat && source.tasks.some(task =>
+      task.repeat && key(task.name) === key(row.name) &&
+      !task.archived && !task.archiveDate
+    )) return "Gleichnamige Wiederholungsserie bereits vorhanden.";
+
+    return "";
+  }
+
+  function validate(row) {
+    if (!key(row.name)) return "Name fehlt.";
+    if (!validDay(row.date)) return "Datum ist ungültig.";
+    if (!row.goalReviewed) return "Ziel auswählen oder bewusst Ohne Ziel wählen.";
+    if (!Number.isInteger(row.interval) || row.interval < 1) {
+      return "Wochenintervall muss eine positive ganze Zahl sein.";
+    }
+    if (row.repeat === "weekly" && !row.weekdays.length) {
+      return "Mindestens einen Wochentag auswählen.";
+    }
+    if (row.minutes !== "" &&
+        (!Number.isFinite(Number(row.minutes)) || Number(row.minutes) < 0 ||
+         Number(row.minutes) > 100000)) {
+      return "Minuten müssen zwischen 0 und 100000 liegen.";
+    }
+    if (row.repeat && (row.minutes !== "" || row.status !== "open")) {
+      return "Serien zunächst offen und ohne Zeit anlegen. " +
+        "Zeit und Status danach je Durchführung erfassen.";
+    }
+    if (row.date > today() && row.status !== "open") {
+      return "Zukünftige Aufgaben können noch nicht bewertet werden.";
+    }
+    return "";
+  }
+
+  function input(parent, label, type, value, update) {
+    const wrapper = document.createElement("label");
+    wrapper.textContent = label;
+    const control = document.createElement("input");
+    control.type = type;
+    control.value = value;
+    control.addEventListener("change", () => {
+      update(control.value);
+      refresh();
+    });
+    wrapper.append(control);
+    parent.append(wrapper);
+    return control;
+  }
+
+  function select(parent, label, value, options, update) {
+    const wrapper = document.createElement("label");
+    wrapper.textContent = label;
+    const control = document.createElement("select");
+    for (const [id, title] of options) {
+      control.add(new Option(title, id));
+    }
+    control.value = value;
+    control.addEventListener("change", () => {
+      update(control.value);
+      draw();
+    });
+    wrapper.append(control);
+    parent.append(wrapper);
+  }
+
+  function draw() {
+    el("fbRows").replaceChildren();
+    rows.forEach((row, index) => {
+      const card = document.createElement("section");
+      card.className = "fb-row";
+      const top = document.createElement("div");
+      top.className = "fb-title";
+      input(top, "Emoji", "text", row.emoji, v => row.emoji = v);
+      input(top, "Aufgabe", "text", row.name, v => row.name = v);
+      const remove = document.createElement("button");
+      remove.textContent = "✕";
+      remove.title = "Aus Vorschau entfernen";
+      remove.onclick = () => { rows.splice(index, 1); draw(); };
+      top.append(remove);
+      card.append(top);
+
+      const grid = document.createElement("div");
+      grid.className = "fb-grid";
+      input(grid, "Datum", "date", row.date, v => row.date = v);
+      select(grid, "Wiederholung", row.repeat, [
+        ["", "Einmalig"], ["daily", "Täglich"],
+        ["weekly", "Wochentage"], ["monthly", "Monatlich"]
+      ], v => row.repeat = v);
+      card.append(grid);
+
+      if (row.repeat === "weekly") {
+        input(grid, "Alle … Wochen", "number", row.interval,
+          v => row.interval = Number(v));
+        const weekdays = document.createElement("div");
+        weekdays.className = "fb-days";
+        [1, 2, 3, 4, 5, 6, 0].forEach(day => {
+          const label = document.createElement("label");
+          label.className = "fb-check";
+          const check = document.createElement("input");
+          check.type = "checkbox";
+          check.checked = row.weekdays.includes(day);
+          check.onchange = () => {
+            row.weekdays = check.checked
+              ? [...new Set([...row.weekdays, day])]
+              : row.weekdays.filter(d => d !== day);
+            refresh();
+          };
+          label.append(check, document.createTextNode(days[day]));
+          weekdays.append(label);
+        });
+        card.append(weekdays);
+      }
+
+      const details = document.createElement("details");
+      details.open = !row.goalReviewed;
+      const summary = document.createElement("summary");
+      summary.textContent = "🎯 " + (
+        row.goalIds.length
+          ? goals().filter(g => row.goalIds.includes(g.id))
+              .map(g => g.name).join(", ")
+          : row.goalReviewed ? "Ohne Ziel" : "Ziel auswählen"
+      );
+      details.append(summary);
+      const goalBox = document.createElement("div");
+      goalBox.className = "fb-goals";
+
+      for (const goal of [{ id: "", name: "Ohne Ziel", emoji: "" }, ...goals()]) {
+        const label = document.createElement("label");
+        label.className = "fb-check";
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.checked = goal.id
+          ? row.goalIds.includes(goal.id)
+          : row.goalReviewed && !row.goalIds.length;
+        check.onchange = () => {
+          if (!goal.id) {
+            row.goalIds = [];
+            row.goalReviewed = check.checked;
+          } else {
+            row.goalIds = check.checked
+              ? [...new Set([...row.goalIds, goal.id])]
+              : row.goalIds.filter(id => id !== goal.id);
+            row.goalReviewed = row.goalIds.length > 0;
+          }
+          row.errors = [];
+          draw();
+        };
+        label.append(check, document.createTextNode(
+          `${goal.emoji || ""} ${goal.name}`
+        ));
+        goalBox.append(label);
+      }
+      details.append(goalBox);
+      card.append(details);
+
+      const extra = document.createElement("details");
+      extra.open = row.minutes !== "" || row.status !== "open";
+      const extraTitle = document.createElement("summary");
+      extraTitle.textContent = "⏱ Minuten und Status";
+      extra.append(extraTitle);
+      const extraGrid = document.createElement("div");
+      extraGrid.className = "fb-grid";
+      const minutes = input(extraGrid, "Tatsächliche Minuten", "number",
+        row.minutes, v => row.minutes = v);
+      minutes.min = "0";
+      minutes.max = "100000";
+      minutes.step = "0.1";
+      select(extraGrid, "Status", row.status, [
+        ["open", "Offen"], ["done", "Geschafft"], ["missed", "Nicht geschafft"]
+      ], v => row.status = v);
+      extra.append(extraGrid);
+      card.append(extra);
+
+      const note = document.createElement("p");
+      note.className = "fb-note";
+      card.append(note);
+      el("fbRows").append(card);
+    });
+    refresh();
+  }
+
+  function refresh() {
+    const seen = new Set();
+    let count = 0;
+    let invalid = false;
+    [...el("fbRows").children].forEach((card, index) => {
+      const row = rows[index];
+      const signature = key(row.name) + "@" + row.date;
+      const reason = duplicate(row, data) ||
+        (seen.has(signature) ? "Doppelt in dieser Vorschau." : "");
+      seen.add(signature);
+      const error = reason ? "" : validate(row);
+      card.classList.toggle("fb-skip", !!reason);
+      card.querySelector(".fb-note").textContent =
+        reason ? "↪ Wird übersprungen: " + reason :
+        error || row.errors.join(" · ") || "✓ Bereit";
+      if (!reason) {
+        count++;
+        if (error || row.errors.length) invalid = true;
+      }
+    });
+    el("fbSave").disabled = saving || invalid || !count;
+    el("fbSave").textContent = `${count} Aufgaben hinzufügen`;
+  }
+
+  el("fbPreview").onclick = () => {
+    try {
+      if (!ready || !user || busy) {
+        throw Error("Bitte zuerst anmelden und die Daten laden lassen.");
+      }
+      const date = dateValue(el("fbDate").value);
+      const lines = el("fbInput").value.split(/\r?\n/).map(clean).filter(Boolean);
+      if (!lines.length) throw Error("Bitte mindestens eine Aufgabe eingeben.");
+      if (lines.length > 100) throw Error("Maximal 100 Aufgaben pro Import.");
+      let defaultDate = date;
+      const next = [];
+      for (const line of lines) {
+        if (/^datum\s*:/i.test(line)) {
+          defaultDate = dateValue(line.slice(line.indexOf(":") + 1));
+        } else {
+          next.push(parseLine(line, defaultDate));
+        }
+      }
+      rows = next;
+      el("fbResult").textContent = "";
+      draw();
+    } catch (error) {
+      el("fbResult").textContent = "⚠️ " + error.message;
+      el("fbSave").disabled = true;
+    }
+  };
+
+  // Änderungen am Ausgangstext erfordern eine neue Vorschau.
+  function invalidate() {
+    rows = [];
+    el("fbRows").replaceChildren();
+    el("fbSave").disabled = true;
+    el("fbResult").textContent = "Bitte Vorschau erstellen.";
+  }
+  el("fbInput").oninput = invalidate;
+  el("fbDate").onchange = invalidate;
+  el("fbToday").onclick = () => {
+    el("fbDate").value = today();
+    invalidate();
+  };
+  el("fbTomorrow").onclick = () => {
+    el("fbDate").value = addDays(today(), 1);
+    invalidate();
+  };
+  el("fbClose").onclick = () => { if (!saving) dialog.close(); };
+  dialog.addEventListener("cancel", event => {
+    if (saving) event.preventDefault();
+  });
+
+  el("fbSave").onclick = async () => {
+    if (saving || !ready || busy || !user) return;
+    refresh();
+    if (el("fbSave").disabled) return;
+
+    saving = true;
+    const batch = JSON.parse(JSON.stringify(rows));
+    const saved = [];
+    const skipped = [];
+    const controls = [...dialog.querySelectorAll("input,select,textarea,button")];
+    controls.forEach(control => control.disabled = true);
+
+    try {
+      const success = await commit(draft => {
+        for (const row of batch) {
+          const reason = duplicate(row, draft);
+          if (reason) {
+            skipped.push(`${row.name}: ${reason}`);
+            continue;
+          }
+          const error = validate(row);
+          if (error || row.errors.length) {
+            throw Error(row.name + ": " + (error || row.errors.join(", ")));
+          }
+          const validGoals = new Set(draft.goals
+            .filter(g => !g.archived).map(g => g.id));
+          if (row.goalIds.some(id => !validGoals.has(id))) {
+            throw Error("Ein Ziel ist nicht mehr verfügbar. Vorschau neu erstellen.");
+          }
+
+          const task = {
+            id: uid(),
+            name: clean(row.name),
+            emoji: clean(row.emoji) || autoEmoji(row.name, "task"),
+            due: row.date,
+            anchor: row.date,
+            repeat: row.repeat,
+            interval: row.interval,
+            weekdays: row.weekdays,
+            goalId: row.goalIds[0] || "",
+            goalIds: row.goalIds,
+            category: "",
+            done: false,
+            v2Imported: true,
+            createdAt: new Date().toISOString()
+          };
+          draft.tasks.push(task);
+
+          if (!task.repeat) {
+            const record = occurrence(task, row.date);
+            record.goalIds = [...row.goalIds];
+            record.goalId = row.goalIds[0] || "";
+            record.status = row.status;
+            record.completedAt = row.status === "done"
+              ? new Date().toISOString() : null;
+            if (row.minutes !== "") {
+              record.sessions = [{
+                manual: true,
+                ms: Math.round(Number(row.minutes) * 60000),
+                day: row.date
+              }];
+            }
+            draft.focusV2.records[record.key] = record;
+          }
+          saved.push(`${task.emoji} ${task.name} · ${displayDate(row.date)}`);
+        }
+      });
+
+      if (!success) {
+        el("fbResult").textContent =
+          "⚠️ Speichern nicht bestätigt. Online-Status prüfen und " +
+          "Daten aktualisieren, bevor du erneut speicherst.";
+        return;
+      }
+
+      rows = [];
+      el("fbRows").replaceChildren();
+      el("fbInput").value = "";
+      el("fbResult").textContent =
+        `✅ ${saved.length} gespeichert · ${skipped.length} übersprungen\n\n` +
+        saved.join("\n") +
+        (skipped.length ? "\n\n↪ " + skipped.join("\n↪ ") : "");
+    } catch (error) {
+      el("fbResult").textContent = "⚠️ " + error.message;
+    } finally {
+      saving = false;
+      controls.forEach(control => control.disabled = false);
+      refresh();
+    }
+  };
+
+  function openBatch() {
+    if (!ready || !user || busy) {
+      toast("Bitte zuerst anmelden und die Online-Daten laden lassen.");
+      return;
+    }
+    if (document.getElementById("editor")?.open) return;
+    if (!rows.length) el("fbDate").value = today();
+    dialog.showModal();
+  }
+
+  // Bestehende dynamische Home-Ansicht berücksichtigen.
+  function installButtons() {
+    document.querySelectorAll("button").forEach(button => {
+      if (button.closest("#fpBatch")) return;
+      if (button.textContent.trim() !== "＋ Aufgabe") return;
+      const parent = button.parentElement;
+      if (!parent || parent.querySelector(".fp-batch-open")) return;
+      const add = document.createElement("button");
+      add.type = "button";
+      add.className = "fp-batch-open";
+      add.textContent = "＋ Mehrere Aufgaben";
+      add.onclick = openBatch;
+      button.after(add);
+    });
+  }
+  let queued = false;
+  new MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      installButtons();
+    });
+  }).observe(document.body, { childList: true, subtree: true });
+  installButtons();
+})();
+</script>
 </body>
 </html>
