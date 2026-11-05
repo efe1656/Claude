@@ -1408,13 +1408,34 @@ function renderStats() {
     metric(future, "🗓️ Noch geplant");
 
   const groups = new Map();
+
   function group(taskId, name, icon) {
-    if (!groups.has(taskId)) {
-      groups.set(taskId, {
-        name, icon, done: 0, missed: 0, open: 0, time: 0
+    // Emojis entfernen und Schreibweise vereinheitlichen.
+    const cleanName = String(name ?? "")
+      .normalize("NFKC")
+      .replace(
+        /[\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}\uFE0E\uFE0F\u200D\u20E3]/gu,
+        ""
+      )
+      .replace(/\s+/gu, " ")
+      .trim();
+
+    const key = cleanName
+      ? "name:" + cleanName.toLocaleLowerCase("de-DE")
+      : "id:" + String(taskId);
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        name: cleanName || "Unbenannte Aufgabe",
+        icon,
+        done: 0,
+        missed: 0,
+        open: 0,
+        time: 0
       });
     }
-    return groups.get(taskId);
+
+    return groups.get(key);
   }
 
   for (const item of due) {
@@ -5852,5 +5873,6 @@ document.addEventListener("visibilitychange", () => {
   }
 }
 </style>
+
 </body>
 </html>
