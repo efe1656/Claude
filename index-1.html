@@ -6732,7 +6732,7 @@ Paket abgeben"></textarea>
     const record = data.focusV2.records[item.key] || item;
     const amount = total(record);
     const future = item.date > today();
-    const disabled = future || !user || !ready || busy || saving;
+   const disabled = future || !user || !ready;
     const history = entries(record);
 
     const widget = document.createElement("section");
@@ -6830,7 +6830,7 @@ Paket abgeben"></textarea>
         }
 
         record.waterEntriesMl = values;
-        const reached = total(record) >= TARGET;
+        const reached = total(record) >= TARAGET;
 
         if (reached && record.status !== "done") {
           // Vorherigen Status für Rückgängig merken.
