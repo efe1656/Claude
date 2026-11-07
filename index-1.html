@@ -948,7 +948,12 @@ async function commit(change) {
       " · Aktualisieren und den Stand prüfen.");
     $("formError").textContent =
       "Nicht bestätigt. Dialog schließen, aktualisieren und den Stand prüfen.";
-    toast("Speichern nicht bestätigt. Bitte Online-Status prüfen.");
+window.alert(
+  "Speichern fehlgeschlagen:\n\n" +
+  (error?.message || "Unbekannter Fehler") +
+  (error?.details ? "\n\nDetails: " + error.details : "") +
+  (error?.hint ? "\n\nHinweis: " + error.hint : "")
+);
     return false;
   } finally {
     busy = false;
