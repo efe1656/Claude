@@ -6896,5 +6896,148 @@ Paket abgeben"></textarea>
   if (typeof render === "function") render();
 })();
 </script>
+<style>
+/* Wasseranzeige: kompakt und horizontal */
+.fp-water {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 4px;
+  margin-top: 5px;
+}
+
+.fp-water-head {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  gap: 4px;
+}
+
+.fp-water-value {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.fp-water-head > span:last-child {
+  display: none;
+}
+
+.fp-water progress {
+  grid-column: 1;
+  grid-row: 2;
+  height: 4px;
+}
+
+.fp-water-controls {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  margin: 0;
+}
+
+/* Nur +200 ml als Schnellbutton behalten */
+.fp-water-controls [data-water-add="250"],
+.fp-water-controls [data-water-add="500"] {
+  display: none;
+}
+
+.fp-water-controls button,
+.fp-water-controls input {
+  min-height: 32px;
+  height: 32px;
+  border-radius: 7px;
+  padding: 3px 6px;
+}
+
+.fp-water-controls button {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.fp-water-controls input {
+  width: 56px;
+  font-size: 16px;
+  padding: 3px 5px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.fp-water-controls input::-webkit-inner-spin-button,
+.fp-water-controls input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.fp-water-controls [data-water-custom],
+.fp-water-controls [data-water-undo] {
+  width: 28px;
+  padding: 0;
+  font-size: 16px;
+}
+
+.fp-water-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 10px;
+}
+
+/* Wasser nutzt die gesamte Kartenbreite */
+article.item:has(.fp-water) {
+  flex-wrap: wrap;
+}
+
+article.item:has(.fp-water) > .fp-water {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  grid-column: 1 / -1;
+}
+
+/* Sehr schmale Karten: zwei flache Zeilen */
+@container water-card (max-width: 310px) {
+  .fp-water {
+    grid-template-columns: 1fr;
+  }
+
+  .fp-water-controls {
+    grid-column: 1;
+    grid-row: 3;
+  }
+}
+
+article.item:has(.fp-water) {
+  container-type: inline-size;
+  container-name: water-card;
+}
+</style>
+
+<script>
+(() => {
+  if (window.fpWaterCompactInstalled) return;
+  if (typeof taskRow !== "function") return;
+
+  window.fpWaterCompactInstalled = true;
+  const previous = taskRow;
+
+  taskRow = function(item) {
+    const template = document.createElement("template");
+    template.innerHTML = previous.apply(this, arguments);
+
+    const article = template.content.querySelector("article.item");
+    const water = article?.querySelector(".fp-water");
+
+    // Gesamte Kartenbreite statt schmaler Textspalte nutzen.
+    if (water) article.appendChild(water);
+
+    return template.innerHTML;
+  };
+
+  if (typeof render === "function") render();
+})();
+</script>
 </body>
 </html>
