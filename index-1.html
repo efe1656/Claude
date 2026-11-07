@@ -6583,5 +6583,318 @@ Paket abgeben"></textarea>
   installButtons();
 })();
 </script>
+<style>
+.fp-water {
+  margin-top: 7px;
+  text-decoration: none;
+}
+.fp-water-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.fp-water-value {
+  color: #65d6ff;
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.fp-water progress {
+  display: block;
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 99px;
+  background: #243240;
+  accent-color: #38bdf8;
+}
+.fp-water progress::-webkit-progress-bar {
+  background: #243240;
+  border-radius: 99px;
+}
+.fp-water progress::-webkit-progress-value {
+  background: linear-gradient(90deg, #0284c7, #67e8f9);
+  border-radius: 99px;
+}
+.fp-water progress::-moz-progress-bar {
+  background: #38bdf8;
+  border-radius: 99px;
+}
+.fp-water-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+}
+.fp-water-controls button,
+.fp-water-controls input {
+  box-sizing: border-box;
+  min-height: 34px;
+  margin: 0;
+  border: 1px solid #344655;
+  border-radius: 9px;
+  background: #14212c;
+  color: #e4f5ff;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 12px;
+}
+.fp-water-controls input {
+  width: 80px;
+  min-width: 0;
+  font-size: 16px;
+}
+.fp-water-controls button {
+  cursor: pointer;
+}
+.fp-water-controls button:disabled,
+.fp-water-controls input:disabled {
+  opacity: .45;
+  cursor: default;
+}
+.fp-water-controls button:focus-visible,
+.fp-water-controls input:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+.fp-water-hint {
+  display: block;
+  margin-top: 5px;
+  color: #a5b5c5;
+  font-size: 11px;
+}
+</style>
+
+<script>
+(() => {
+  "use strict";
+
+  if (window.fpWaterInstalled) return;
+
+  if (
+    typeof taskRow !== "function" ||
+    typeof commit !== "function" ||
+    typeof ensureRecord !== "function"
+  ) {
+    console.warn("Wasseranzeige: Aufgabenfunktionen fehlen.");
+    return;
+  }
+
+  window.fpWaterInstalled = true;
+
+  const TARGET = 3000;
+  const previousTaskRow = taskRow;
+  let saving = false;
+
+  const liters = ml =>
+    (ml / 1000).toLocaleString("de-DE", {
+      maximumFractionDigits: 3
+    });
+
+  function isWater(item) {
+    const task = data.tasks.find(t => t.id === item.taskId);
+    return [item.name, task?.name].some(name => {
+      const text = String(name || "")
+        .toLowerCase()
+        .replace(/\s+/g, "");
+
+      return text.includes("wasser") &&
+        /(?:3l|3liter|3000ml)/.test(text);
+    });
+  }
+
+  function entries(record) {
+    return Array.isArray(record.waterEntriesMl)
+      ? record.waterEntriesMl.filter(
+          value => Number.isInteger(value) && value > 0
+        )
+      : [];
+  }
+
+  function total(record) {
+    return entries(record).reduce((sum, value) => sum + value, 0);
+  }
+
+  taskRow = function(item) {
+    const html = previousTaskRow.apply(this, arguments);
+    if (!isWater(item)) return html;
+
+    const template = document.createElement("template");
+    template.innerHTML = html;
+
+    const body = template.content.querySelector("article .body");
+    if (!body) return html;
+
+    const record = data.focusV2.records[item.key] || item;
+    const amount = total(record);
+    const future = item.date > today();
+    const disabled = future || !user || !ready || busy || saving;
+    const history = entries(record);
+
+    const widget = document.createElement("section");
+    widget.className = "fp-water";
+    widget.dataset.waterKey = item.key;
+
+    widget.innerHTML = `
+      <div class="fp-water-head">
+        <span class="fp-water-value">
+          💧 ${liters(amount)} L / 3 L
+        </span>
+        <span>${amount >= TARGET ? "✅" : ""}</span>
+      </div>
+
+      <progress max="${TARGET}" value="${Math.min(amount, TARGET)}"
+        aria-label="Getrunkene Wassermenge"
+        aria-valuetext="${liters(amount)} von 3 Litern">
+      </progress>
+
+      <div class="fp-water-controls">
+        <button type="button" data-water-add="200"
+          ${disabled ? "disabled" : ""}>+200 ml</button>
+        <button type="button" data-water-add="250"
+          ${disabled ? "disabled" : ""}>+250 ml</button>
+        <button type="button" data-water-add="500"
+          ${disabled ? "disabled" : ""}>+500 ml</button>
+
+        <input type="number" min="1" max="10000" step="1"
+          inputmode="numeric" placeholder="ml"
+          aria-label="Eigene Wassermenge in Millilitern"
+          ${disabled ? "disabled" : ""}>
+
+        <button type="button" data-water-custom
+          aria-label="Eigene Wassermenge hinzufügen"
+          ${disabled ? "disabled" : ""}>＋</button>
+
+        <button type="button" data-water-undo
+          aria-label="Letzte Wassereingabe rückgängig machen"
+          title="Letzte Eingabe rückgängig"
+          ${disabled || !history.length ? "disabled" : ""}>↶</button>
+      </div>
+    `;
+
+    if (future || (record.status === "done" && amount < TARGET)) {
+      const hint = document.createElement("small");
+      hint.className = "fp-water-hint";
+      hint.textContent = future
+        ? "Mengen können ab diesem Tag erfasst werden."
+        : "Abgehakt · erfasste Menge separat angezeigt.";
+      widget.appendChild(hint);
+    }
+
+    body.appendChild(widget);
+    return template.innerHTML;
+  };
+
+  async function updateWater(widget, amount, undo = false) {
+    if (saving || busy) return;
+    if (!ready || !user) {
+      toast("Bitte zuerst anmelden und die Online-Daten laden.");
+      return;
+    }
+
+    const key = widget.dataset.waterKey;
+
+    try {
+      const item = findOccurrence(key);
+      if (!isWater(item) || item.status === "cancelled") return;
+
+      if (item.date > today()) {
+        toast("Wasser erst am jeweiligen Tag erfassen.");
+        return;
+      }
+
+      if (!undo &&
+          (!Number.isInteger(amount) || amount < 1 || amount > 10000)) {
+        toast("Bitte eine ganze Menge von 1 bis 10000 ml eingeben.");
+        return;
+      }
+
+      saving = true;
+      widget.querySelectorAll("button,input").forEach(element => {
+        element.disabled = true;
+      });
+
+      const saved = await commit(draft => {
+        const record = ensureRecord(draft, key);
+        const values = entries(record);
+
+        if (undo) {
+          if (!values.length) return;
+          values.pop();
+        } else {
+          values.push(amount);
+        }
+
+        record.waterEntriesMl = values;
+        const reached = total(record) >= TARGET;
+
+        if (reached && record.status !== "done") {
+          // Vorherigen Status für Rückgängig merken.
+          record.waterPreviousStatus = record.status;
+          record.waterAutoCompleted = true;
+
+          if (draft.focusV2.timer?.key === key) {
+            stopActiveTimer(draft);
+            draft.focusV2.timer = null;
+          }
+
+          record.status = "done";
+          record.completedAt = new Date().toISOString();
+        } else if (!reached && record.waterAutoCompleted) {
+          // Nur eine durch diesen Zusatz ausgelöste Erledigung aufheben.
+          if (record.status === "done") {
+            record.status = record.waterPreviousStatus === "missed"
+              ? "missed"
+              : "open";
+            record.completedAt = null;
+          }
+          delete record.waterAutoCompleted;
+          delete record.waterPreviousStatus;
+        }
+      });
+
+      if (saved) {
+        toast(undo ? "Letzte Wassereingabe entfernt." : "💧 Wasser gespeichert.");
+      }
+    } catch (error) {
+      toast("Wasser konnte nicht gespeichert werden: " + error.message);
+    } finally {
+      saving = false;
+      render();
+    }
+  }
+
+  document.addEventListener("click", event => {
+    const button = event.target.closest(".fp-water button");
+    if (!button || button.disabled) return;
+
+    const widget = button.closest(".fp-water");
+
+    if (button.hasAttribute("data-water-undo")) {
+      void updateWater(widget, 0, true);
+    } else if (button.hasAttribute("data-water-add")) {
+      void updateWater(widget, Number(button.dataset.waterAdd));
+    } else if (button.hasAttribute("data-water-custom")) {
+      const input = widget.querySelector("input");
+      void updateWater(widget, Number(input.value));
+    }
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Enter" ||
+        !event.target.matches(".fp-water input")) return;
+
+    event.preventDefault();
+    const widget = event.target.closest(".fp-water");
+    void updateWater(widget, Number(event.target.value));
+  });
+
+  if (typeof render === "function") render();
+})();
+</script>
 </body>
 </html>
